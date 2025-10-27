@@ -127,7 +127,7 @@ todo.exe
 
 #### Option 2: Add to PATH (Recommended)
 
-This allows you to run `devtodo` from anywhere in your terminal.
+This allows you to run `todo` from anywhere in your terminal.
 
 1. **Copy the executable to a permanent location:**
 
