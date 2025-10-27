@@ -1,6 +1,6 @@
-use crate::task::{Project, Status, Task};
-use crate::storage::Storage;
 use crate::calendar::Calendar;
+use crate::storage::Storage;
+use crate::task::{Project, Status, Task};
 use chrono::{Local, NaiveTime};
 use std::io;
 
