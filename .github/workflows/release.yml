@@ -6,6 +6,9 @@ on:
       - "v*"
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 env:
   CARGO_TERM_COLOR: always
 
@@ -23,14 +26,12 @@ jobs:
 
       - name: Create Release
         id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        uses: softprops/action-gh-release@v1
         with:
-          tag_name: ${{ github.ref }}
-          release_name: Release ${{ github.ref_name }}
+          name: Release ${{ github.ref_name }}
           draft: false
           prerelease: false
+          generate_release_notes: true
 
   build-windows:
     name: Build Windows
@@ -99,25 +100,12 @@ jobs:
           # Build the installer
           wix build installer.wxs -o todo-installer.msi
 
-      - name: Upload Windows EXE
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Windows Assets
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/release/todo.exe
-          asset_name: todo-windows-x64.exe
-          asset_content_type: application/vnd.microsoft.portable-executable
-
-      - name: Upload Windows Installer
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./todo-installer.msi
-          asset_name: todo-windows-x64-installer.msi
-          asset_content_type: application/x-msi
+          files: |
+            ./target/release/todo.exe
+            ./todo-installer.msi
 
   build-linux:
     name: Build Linux
@@ -171,25 +159,15 @@ jobs:
       - name: Build DEB package
         run: cargo deb
 
-      - name: Upload Linux Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/release/todo
-          asset_name: todo-linux-x64
-          asset_content_type: application/x-executable
+      - name: Rename Linux Binary
+        run: cp ./target/release/todo ./todo-linux-x64
 
-      - name: Upload DEB package
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Linux Assets
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/debian/todo_${{ needs.create-release.outputs.version }}_amd64.deb
-          asset_name: todo_${{ needs.create-release.outputs.version }}_amd64.deb
-          asset_content_type: application/vnd.debian.binary-package
+          files: |
+            ./todo-linux-x64
+            ./target/debian/*.deb
 
   build-macos:
     name: Build macOS
@@ -215,22 +193,12 @@ jobs:
           chmod +x build-macos.sh
           ./build-macos.sh
 
-      - name: Upload macOS Binary
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/release/todo
-          asset_name: todo-macos-x64
-          asset_content_type: application/x-executable
+      - name: Rename macOS Binary
+        run: cp ./target/release/todo ./todo-macos-x64
 
-      - name: Upload macOS DMG Installer
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload macOS Assets
+        uses: softprops/action-gh-release@v1
         with:
-          upload_url: ${{ needs.create-release.outputs.upload_url }}
-          asset_path: ./target/Todo-0.1.0-macOS.dmg
-          asset_name: Todo-0.1.0-macOS.dmg
-          asset_content_type: application/x-apple-diskimage
+          files: |
+            ./todo-macos-x64
+            ./target/*.dmg
