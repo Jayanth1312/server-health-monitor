@@ -24,9 +24,16 @@ pub fn handle_events(app: &mut App) -> io::Result<bool> {
                             return Ok(true);
                         }
                     }
+                    ViewMode::ViewingTask => {
+                        if handle_viewing_mode(app, key.code) {
+                            return Ok(true);
+                        }
+                    }
                 },
                 InputMode::AddingTask
+                | InputMode::AddingTaskDescription
                 | InputMode::EditingTask
+                | InputMode::EditingTaskDescription
                 | InputMode::AddingProject
                 | InputMode::RenamingProject => handle_input_mode(app, key.code),
             }
@@ -55,6 +62,7 @@ fn handle_task_mode(app: &mut App, key_code: KeyCode) -> bool {
         KeyCode::Backspace | KeyCode::Char('b') | KeyCode::Char('h') => app.exit_to_projects(),
         KeyCode::Down | KeyCode::Char('j') => app.next_task(),
         KeyCode::Up | KeyCode::Char('k') => app.previous_task(),
+        KeyCode::Enter => app.enter_task_view(),
         KeyCode::Char(' ') | KeyCode::Char('c') => app.cycle_status(),
         KeyCode::Char('p') => app.cycle_priority(),
         KeyCode::Char('d') => app.delete_task(),
@@ -63,6 +71,15 @@ fn handle_task_mode(app: &mut App, key_code: KeyCode) -> bool {
         KeyCode::Char('1') => app.set_status(Status::Todo),
         KeyCode::Char('2') => app.set_status(Status::InProgress),
         KeyCode::Char('3') => app.set_status(Status::Done),
+        _ => {}
+    }
+    false
+}
+
+fn handle_viewing_mode(app: &mut App, key_code: KeyCode) -> bool {
+    match key_code {
+        KeyCode::Char('q') | KeyCode::Esc => return true,
+        KeyCode::Backspace | KeyCode::Char('h') | KeyCode::Enter => app.exit_task_view(),
         _ => {}
     }
     false

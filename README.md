@@ -19,6 +19,7 @@ A fast, lightweight, and intuitive terminal-based todo application built with Ru
 - Three status levels: Todo, In Progress, Completed
 - Quick status cycling with keyboard shortcuts
 - Color-coded task visualization
+- **Optional task descriptions** - Add detailed notes to any task
 - **Task priorities using Eisenhower Matrix** - Four priority quadrants:
   - 🔴 **Q1** - Urgent & Important (Do First)
   - 🟢 **Q2** - Not Urgent & Important (Schedule)
@@ -220,8 +221,9 @@ After opening a project, you'll see its task list.
 | Key                      | Action                                        |
 | ------------------------ | --------------------------------------------- |
 | `↑/↓` or `j/k`           | Navigate through tasks                        |
-| `a`                      | Add new task                                  |
-| `e`                      | Edit selected task                            |
+| `Enter`                  | View selected task details                    |
+| `a`                      | Add new task (title → description)            |
+| `e`                      | Edit selected task (title → description)      |
 | `d`                      | Delete selected task                          |
 | `Space` or `c`           | Cycle task status (Todo → In Progress → Done) |
 | `1`                      | Set task to Todo                              |
@@ -230,6 +232,29 @@ After opening a project, you'll see its task list.
 | `p`                      | Cycle task priority (Q1 → Q2 → Q3 → Q4)       |
 | `Backspace`, `b`, or `h` | Go back to project list                       |
 | `q` or `Esc`             | Quit application                              |
+
+### Adding and Editing Tasks
+
+When you add or edit a task, you'll go through a two-step process:
+
+**Adding a New Task:**
+
+1. Press `a` to start adding a task
+2. Enter the task **title** and press `Enter`
+3. Enter the task **description** (optional) and press `Enter` to save
+4. Press `Esc` at any step to cancel
+
+**Editing a Task:**
+
+1. Select a task and press `e` to edit
+2. Edit the task **title** and press `Enter`
+3. Edit the task **description** (leave empty to remove) and press `Enter` to save
+4. Press `Esc` at any step to cancel changes
+
+**Viewing Task Details:**
+
+- Press `Enter` on any task to view its full details including title, status, priority, and description
+- Press `Enter`, `Backspace`, or `h` to return to the task list
 
 ### Input Mode
 
@@ -344,7 +369,7 @@ This project is licensed under the MIT License.
 - [ ] Task filtering and search
 - [ ] Multiple task lists per project
 - [ ] Export to different formats (CSV, Markdown)
-- [ ] Task notes/descriptions
+- [x] Task notes/descriptions
 - [ ] Keyboard shortcut customization
 - [ ] Theme customization
 - [ ] Task tags/categories

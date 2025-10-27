@@ -13,6 +13,7 @@ pub fn render(f: &mut Frame, app: &App) {
     match app.view_mode {
         ViewMode::ProjectList => render_project_view(f, app),
         ViewMode::TaskList => render_task_view(f, app),
+        ViewMode::ViewingTask => render_task_detail_view(f, app),
     }
 }
 
@@ -52,6 +53,23 @@ fn render_task_view(f: &mut Frame, app: &App) {
     render_task_list(f, chunks[1], app);
     render_input(f, chunks[2], app);
     render_task_help(f, chunks[3]);
+}
+
+fn render_task_detail_view(f: &mut Frame, app: &App) {
+    let size = f.size();
+
+    let chunks = Layout::default()
+        .direction(Direction::Vertical)
+        .constraints([
+            Constraint::Length(3),  // Title
+            Constraint::Min(5),     // Task details
+            Constraint::Length(3),  // Help
+        ])
+        .split(size);
+
+    render_task_title(f, chunks[0], app);
+    render_task_details(f, chunks[1], app);
+    render_viewing_help(f, chunks[2]);
 }
 
 fn render_project_title(f: &mut Frame, area: ratatui::layout::Rect, app: &App) {
@@ -189,10 +207,66 @@ fn render_task_list(f: &mut Frame, area: ratatui::layout::Rect, app: &App) {
     f.render_stateful_widget(list, area, &mut state);
 }
 
+fn render_task_details(f: &mut Frame, area: ratatui::layout::Rect, app: &App) {
+    let content = if let Some(task) = app.get_current_task() {
+        let (status_symbol, status_color) = match task.status {
+            crate::task::Status::Todo => ("[ ] Todo", Color::Yellow),
+            crate::task::Status::InProgress => ("[>] In Progress", Color::Blue),
+            crate::task::Status::Done => ("[X] Completed", Color::Green),
+        };
+        let (priority_symbol, priority_color) = task.priority.display();
+
+        vec![
+            Line::from(vec![
+                Span::styled("Title: ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(&task.title, Style::default().fg(Color::White)),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Status: ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(status_symbol, Style::default().fg(status_color)),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Priority: ", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+                Span::styled(priority_symbol, Style::default().fg(priority_color)),
+                Span::raw(" - "),
+                Span::styled(task.priority.description(), Style::default().fg(Color::DarkGray)),
+            ]),
+            Line::from(""),
+            Line::from(vec![
+                Span::styled("Description:", Style::default().fg(Color::Cyan).add_modifier(Modifier::BOLD)),
+            ]),
+            Line::from(
+                task.description
+                    .as_ref()
+                    .map(|d| d.as_str())
+                    .unwrap_or("No description")
+            ),
+        ]
+    } else {
+        vec![Line::from("No task selected")]
+    };
+
+    let details = Paragraph::new(content)
+        .style(Style::default().fg(Color::White))
+        .block(
+            Block::default()
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::Cyan))
+                .title(" Task Details "),
+        )
+        .wrap(Wrap { trim: false });
+
+    f.render_widget(details, area);
+}
+
 fn render_input(f: &mut Frame, area: ratatui::layout::Rect, app: &App) {
     let input_title = match app.input_mode {
-        InputMode::AddingTask => " Add New Task (Enter to save, Esc to cancel) ",
-        InputMode::EditingTask => " Edit Task (Enter to save, Esc to cancel) ",
+        InputMode::AddingTask => " Enter Task Title (Enter to continue, Esc to cancel) ",
+        InputMode::AddingTaskDescription => " Enter Task Description (Enter to save, Esc to skip) ",
+        InputMode::EditingTask => " Edit Task Title (Enter to continue, Esc to cancel) ",
+        InputMode::EditingTaskDescription => " Edit Task Description (Enter to save, Esc to cancel, empty to clear) ",
         InputMode::AddingProject => " Add New Project (Enter to save, Esc to cancel) ",
         InputMode::RenamingProject => " Rename Project (Enter to save, Esc to cancel) ",
         InputMode::Normal => " Input ",
@@ -294,13 +368,22 @@ fn render_task_help(f: &mut Frame, area: ratatui::layout::Rect) {
             Span::raw("↑/↓ or j/k "),
             Span::styled("│ ", Style::default().fg(Color::DarkGray)),
             Span::styled(
+                "View: ",
+                Style::default()
+                    .fg(Color::Magenta)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw("Enter "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
                 "Back: ",
                 Style::default()
                     .fg(Color::Magenta)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Backspace/b/h "),
-            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::raw("Backspace/b/h"),
+        ]),
+        Line::from(vec![
             Span::styled(
                 "Add: ",
                 Style::default()
@@ -321,7 +404,15 @@ fn render_task_help(f: &mut Frame, area: ratatui::layout::Rect) {
                     .fg(Color::Red)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw("d"),
+            Span::raw("d "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "Priority: ",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("p", Style::default().fg(Color::White)),
         ]),
         Line::from(vec![
             Span::styled(
@@ -369,6 +460,64 @@ fn render_task_help(f: &mut Frame, area: ratatui::layout::Rect) {
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw("q or Esc"),
+        ]),
+    ];
+
+    let help = Paragraph::new(help_text)
+        .block(
+            Block::default()
+                .title(" Help ")
+                .borders(Borders::ALL)
+                .border_style(Style::default().fg(Color::DarkGray)),
+        )
+        .wrap(Wrap { trim: true });
+
+    f.render_widget(help, area);
+}
+
+fn render_viewing_help(f: &mut Frame, area: ratatui::layout::Rect) {
+    let help_text = vec![
+        Line::from(vec![
+            Span::styled(
+                "Press ",
+                Style::default().fg(Color::White),
+            ),
+            Span::styled(
+                "Enter",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(", "),
+            Span::styled(
+                "Backspace",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(", or "),
+            Span::styled(
+                "h",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" to go back "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "q",
+                Style::default()
+                    .fg(Color::Red)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" or "),
+            Span::styled(
+                "Esc",
+                Style::default()
+                    .fg(Color::Red)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::raw(" to quit"),
         ]),
     ];
 

@@ -6,7 +6,9 @@ use std::io;
 pub enum InputMode {
     Normal,
     AddingTask,
+    AddingTaskDescription,
     EditingTask,
+    EditingTaskDescription,
     AddingProject,
     RenamingProject,
 }
@@ -15,6 +17,7 @@ pub enum InputMode {
 pub enum ViewMode {
     ProjectList,
     TaskList,
+    ViewingTask,
 }
 
 pub struct App {
@@ -24,6 +27,7 @@ pub struct App {
     pub input_mode: InputMode,
     pub view_mode: ViewMode,
     pub input_buffer: String,
+    pub temp_task_title: String,
     storage: Storage,
 }
 
@@ -48,6 +52,7 @@ impl App {
             input_mode: InputMode::Normal,
             view_mode: ViewMode::ProjectList,
             input_buffer: String::new(),
+            temp_task_title: String::new(),
             storage,
         })
     }
@@ -98,6 +103,18 @@ impl App {
 
     pub fn exit_to_projects(&mut self) {
         self.view_mode = ViewMode::ProjectList;
+    }
+
+    pub fn enter_task_view(&mut self) {
+        if let Some(project) = self.projects.get(self.selected_project) {
+            if !project.tasks.is_empty() {
+                self.view_mode = ViewMode::ViewingTask;
+            }
+        }
+    }
+
+    pub fn exit_task_view(&mut self) {
+        self.view_mode = ViewMode::TaskList;
     }
 
     // Task operations
@@ -177,46 +194,95 @@ impl App {
         }
     }
 
+
+
     pub fn finish_input(&mut self) {
-        if !self.input_buffer.trim().is_empty() {
-            match self.input_mode {
-                InputMode::AddingTask => {
-                    if let Some(project) = self.projects.get_mut(self.selected_project) {
-                        project.tasks.push(Task::new(self.input_buffer.trim()));
-                        self.selected_task = project.tasks.len() - 1;
-                    }
+        match self.input_mode {
+            InputMode::AddingTask => {
+                if !self.input_buffer.trim().is_empty() {
+                    // Save title and transition to description input
+                    self.temp_task_title = self.input_buffer.trim().to_string();
+                    self.input_buffer.clear();
+                    self.input_mode = InputMode::AddingTaskDescription;
+                    return;
                 }
-                InputMode::EditingTask => {
-                    if let Some(project) = self.projects.get_mut(self.selected_project) {
-                        if let Some(task) = project.tasks.get_mut(self.selected_task) {
-                            task.title = self.input_buffer.trim().to_string();
+            }
+            InputMode::AddingTaskDescription => {
+                // Create task with title and description
+                if let Some(project) = self.projects.get_mut(self.selected_project) {
+                    let mut task = Task::new(&self.temp_task_title);
+                    if !self.input_buffer.trim().is_empty() {
+                        task.description = Some(self.input_buffer.trim().to_string());
+                    }
+                    project.tasks.push(task);
+                    self.selected_task = project.tasks.len() - 1;
+                }
+                self.temp_task_title.clear();
+            }
+            InputMode::EditingTask => {
+                if !self.input_buffer.trim().is_empty() {
+                    // Save title and transition to description editing
+                    self.temp_task_title = self.input_buffer.trim().to_string();
+                    if let Some(project) = self.projects.get(self.selected_project) {
+                        if let Some(task) = project.tasks.get(self.selected_task) {
+                            self.input_buffer = task.description.clone().unwrap_or_default();
+                            self.input_mode = InputMode::EditingTaskDescription;
+                            return;
                         }
                     }
                 }
-                InputMode::AddingProject => {
+            }
+            InputMode::EditingTaskDescription => {
+                // Save both title and description
+                if let Some(project) = self.projects.get_mut(self.selected_project) {
+                    if let Some(task) = project.tasks.get_mut(self.selected_task) {
+                        task.title = self.temp_task_title.clone();
+                        if self.input_buffer.trim().is_empty() {
+                            task.description = None;
+                        } else {
+                            task.description = Some(self.input_buffer.trim().to_string());
+                        }
+                    }
+                }
+                self.temp_task_title.clear();
+            }
+            InputMode::AddingProject => {
+                if !self.input_buffer.trim().is_empty() {
                     self.projects.push(Project::new(self.input_buffer.trim()));
                     self.selected_project = self.projects.len() - 1;
                 }
-                InputMode::RenamingProject => {
+            }
+            InputMode::RenamingProject => {
+                if !self.input_buffer.trim().is_empty() {
                     if let Some(project) = self.projects.get_mut(self.selected_project) {
                         project.name = self.input_buffer.trim().to_string();
                     }
                 }
-                InputMode::Normal => {}
             }
+            InputMode::Normal => {}
+        }
+        if self.input_mode != InputMode::Normal {
             let _ = self.save();
         }
         self.input_buffer.clear();
+        self.temp_task_title.clear();
         self.input_mode = InputMode::Normal;
     }
 
     pub fn cancel_input(&mut self) {
         self.input_buffer.clear();
+        self.temp_task_title.clear();
         self.input_mode = InputMode::Normal;
     }
 
     pub fn get_current_project(&self) -> Option<&Project> {
         self.projects.get(self.selected_project)
+    }
+
+    pub fn get_current_task(&self) -> Option<&Task> {
+        self.projects
+            .get(self.selected_project)
+            .and_then(|p| p.tasks.get(self.selected_task))
     }
 
     fn save(&self) -> io::Result<()> {

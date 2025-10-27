@@ -35,6 +35,15 @@ impl Priority {
         }
     }
 
+    pub fn description(&self) -> &str {
+        match self {
+            Priority::UrgentImportant => "Urgent & Important (Do First)",
+            Priority::NotUrgentImportant => "Not Urgent & Important (Schedule)",
+            Priority::UrgentNotImportant => "Urgent & Not Important (Delegate)",
+            Priority::NotUrgentNotImportant => "Not Urgent & Not Important (Eliminate)",
+        }
+    }
+}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
@@ -42,6 +51,8 @@ pub struct Task {
     pub status: Status,
     #[serde(default = "default_priority")]
     pub priority: Priority,
+    #[serde(default)]
+    pub description: Option<String>,
 }
 
 fn default_priority() -> Priority {
@@ -54,6 +65,7 @@ impl Task {
             title: title.to_string(),
             status: Status::Todo,
             priority: Priority::NotUrgentImportant, // Default to Q2
+            description: None,
         }
     }
 
