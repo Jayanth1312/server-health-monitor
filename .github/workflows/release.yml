@@ -1,0 +1,221 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    outputs:
+      upload_url: ${{ steps.create_release.outputs.upload_url }}
+      version: ${{ steps.get_version.outputs.version }}
+    steps:
+      - name: Get version from tag
+        id: get_version
+        run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+  build-windows:
+    name: Build Windows
+    needs: create-release
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Create Windows Installer with WiX
+        shell: pwsh
+        run: |
+          # Install WiX
+          dotnet tool install --global wix
+          wix extension add WixToolset.UI.wixext
+
+          # Create WiX source file
+          $version = "${{ needs.create-release.outputs.version }}"
+          if ([string]::IsNullOrEmpty($version)) { $version = "0.1.0" }
+
+          @"
+          <?xml version="1.0" encoding="UTF-8"?>
+          <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+            <Product Id="*" Name="Todo App" Language="1033" Version="$version"
+                     Manufacturer="Todo App" UpgradeCode="12345678-1234-1234-1234-123456789012">
+              <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
+              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
+              <MediaTemplate EmbedCab="yes" />
+
+              <Feature Id="ProductFeature" Title="Todo App" Level="1">
+                <ComponentGroupRef Id="ProductComponents" />
+              </Feature>
+
+              <Directory Id="TARGETDIR" Name="SourceDir">
+                <Directory Id="ProgramFiles64Folder">
+                  <Directory Id="INSTALLFOLDER" Name="TodoApp" />
+                </Directory>
+                <Directory Id="ProgramMenuFolder">
+                  <Directory Id="ApplicationProgramsFolder" Name="Todo App"/>
+                </Directory>
+              </Directory>
+
+              <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
+                <Component Id="TodoExe" Guid="*">
+                  <File Id="TodoExeFile" Source="target\release\todo.exe" KeyPath="yes">
+                    <Shortcut Id="TodoStartMenuShortcut" Directory="ApplicationProgramsFolder"
+                              Name="Todo App" WorkingDirectory="INSTALLFOLDER"
+                              Icon="TodoIcon.exe" IconIndex="0" Advertise="yes" />
+                  </File>
+                </Component>
+              </ComponentGroup>
+
+              <Icon Id="TodoIcon.exe" SourceFile="target\release\todo.exe" />
+            </Product>
+          </Wix>
+          "@ | Out-File -FilePath installer.wxs -Encoding UTF8
+
+          # Build the installer
+          wix build installer.wxs -o todo-installer.msi
+
+      - name: Upload Windows EXE
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/todo.exe
+          asset_name: todo-windows-x64.exe
+          asset_content_type: application/vnd.microsoft.portable-executable
+
+      - name: Upload Windows Installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./todo-installer.msi
+          asset_name: todo-windows-x64-installer.msi
+          asset_content_type: application/x-msi
+
+  build-linux:
+    name: Build Linux
+    needs: create-release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Strip binary
+        run: strip target/release/todo
+
+      - name: Install cargo-deb
+        run: cargo install cargo-deb
+
+      - name: Update Cargo.toml for deb package
+        run: |
+          cat >> Cargo.toml << 'EOF'
+
+          [package.metadata.deb]
+          maintainer = "Your Name <your.email@example.com>"
+          copyright = "2024, Your Name <your.email@example.com>"
+          license-file = ["LICENSE", "4"]
+          extended-description = """\
+          A terminal-based todo application built with Rust.
+          """
+          depends = "$auto"
+          section = "utility"
+          priority = "optional"
+          assets = [
+              ["target/release/todo", "usr/bin/", "755"],
+          ]
+          EOF
+
+      - name: Create LICENSE file if not exists
+        run: |
+          if [ ! -f LICENSE ]; then
+            echo "MIT License" > LICENSE
+            echo "" >> LICENSE
+            echo "Copyright (c) $(date +%Y)" >> LICENSE
+          fi
+
+      - name: Build DEB package
+        run: cargo deb
+
+      - name: Upload Linux Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/todo
+          asset_name: todo-linux-x64
+          asset_content_type: application/x-executable
+
+      - name: Upload DEB package
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/debian/todo_${{ needs.create-release.outputs.version }}_amd64.deb
+          asset_name: todo_${{ needs.create-release.outputs.version }}_amd64.deb
+          asset_content_type: application/vnd.debian.binary-package
+
+  build-macos:
+    name: Build macOS
+    needs: create-release
+    runs-on: macos-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rust-lang/setup-rust-toolchain@v1
+        with:
+          toolchain: stable
+
+      - name: Build Release
+        run: cargo build --release
+
+      - name: Strip binary
+        run: strip target/release/todo
+
+      - name: Upload macOS Binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/release/todo
+          asset_name: todo-macos-x64
+          asset_content_type: application/x-executable
