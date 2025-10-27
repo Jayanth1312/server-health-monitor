@@ -1,379 +1,270 @@
-# Todo - Terminal-based Task Manager
+# Todo - Terminal Task Manager
 
-A fast, lightweight, and intuitive terminal-based todo application built with Rust. Organize your tasks by projects and track their progress with a beautiful TUI interface.
+A fast and beautiful terminal-based todo app built with Rust. Manage your tasks with ease using keyboard shortcuts and a clean interface.
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)
 
-## Features
+## ✨ Features
 
-✨ **Project-based Organization**
+- **📁 Projects** - Organize tasks into projects
+- **📝 Tasks** - Add title, description, status, and priority
+- **📅 Due Dates** - Set deadlines with a visual calendar
+- **⏰ Reminders** - See upcoming tasks on the homepage
+- **🔍 Search** - Find tasks instantly with fuzzy search
+- **🎨 Priorities** - Eisenhower Matrix (4 quadrants)
+- **💾 Auto-Save** - Everything saves automatically
 
-- Create and manage multiple projects
-- Each project contains its own task list
-- Track completion progress per project
+## 🚀 Quick Start
 
-📋 **Task Management**
+### Install Rust (if needed)
 
-- Add, edit, and delete tasks
-- Three status levels: Todo, In Progress, Completed
-- Quick status cycling with keyboard shortcuts
-- Color-coded task visualization
-- **Optional task descriptions** - Add detailed notes to any task
-- **Task priorities using Eisenhower Matrix** - Four priority quadrants:
-  - 🔴 **Q1** - Urgent & Important (Do First)
-  - 🟢 **Q2** - Not Urgent & Important (Schedule)
-  - 🟡 **Q3** - Urgent & Not Important (Delegate)
-  - ⚪ **Q4** - Not Urgent & Not Important (Eliminate)
+Download from [rust-lang.org](https://www.rust-lang.org/)
 
-🎨 **Beautiful TUI Interface**
-
-- Clean and intuitive terminal user interface
-- Vim-style navigation (hjkl) supported
-- Arrow key navigation also available
-- Color-coded status indicators:
-  - 🟡 **Yellow** - Todo tasks
-  - 🔵 **Blue** - In Progress tasks
-  - 🟢 **Green** - Completed tasks
-
-💾 **Persistent Storage**
-
-- Automatic saving of all projects and tasks
-- Data stored in JSON format
-- Cross-platform storage location:
-  - Windows: `%APPDATA%\dev-todo\projects.json`
-  - Linux/Mac: `~/.config/dev-todo/projects.json`
-
-⚡ **Fast and Lightweight**
-
-- Written in Rust for maximum performance
-- Minimal resource usage
-- Instant startup time
-
-## Installation
-
-### Prerequisites
-
-- Rust 1.70 or higher
-- Cargo (comes with Rust)
-
-### Building from Source
-
-1. Clone the repository:
+### Build & Run
 
 ```bash
 git clone <repository-url>
 cd rust
-```
-
-2. Build the release version:
-
-```bash
 cargo build --release
+./target/release/todo        # Linux/Mac
+.\target\release\todo.exe    # Windows
 ```
 
-3. The executable will be located at:
+## 🎮 How to Use
+
+### Main Screen (Projects)
 
 ```
-target/release/todo.exe (Windows)
-target/release/todo (Linux/Mac)
+Press 'Enter' to open a project
+Press 'n' to create new project
+Press 's' to search all tasks
+Press 'q' to quit
 ```
 
-### Creating a macOS Installer (.dmg)
-
-**Note: This must be done on a Mac computer (macOS required for creating .dmg files)**
-
-If you're on Windows and want to share with a Mac user, your friend will need to build it themselves, OR you can use a Mac/VM to create the installer.
-
-1. On macOS, navigate to the project directory:
-
-```bash
-cd rust
-```
-
-2. Make the build script executable and run it:
-
-```bash
-chmod +x build-macos.sh
-./build-macos.sh
-```
-
-3. The installer will be created at:
+### Inside a Project (Tasks)
 
 ```
-target/Todo-0.1.0-macOS.dmg
+Press 'a' to add a task
+Press 'e' to edit a task
+Press 'd' to delete a task
+Press 'Enter' to view task details
+Press 'Space' to change status (Todo → In Progress → Done)
+Press 'p' to change priority (Q1 → Q2 → Q3 → Q4)
+Press 't' to set due date
+Press 's' to search
+Press 'Backspace' to go back
 ```
 
-4. Share this `.dmg` file with your friend. They can:
-   - Double-click to mount the disk image
-   - Drag the Todo app to their Applications folder
-   - Launch it from Applications or Spotlight
+### Understanding Task Display
 
-**Alternative for Mac users without building:**
+Tasks look like this:
 
-If you just want to run the app without creating an installer, simply:
-
-```bash
-cargo build --release
-./target/release/todo
+```
+[ ] 🟢 Q2 Buy groceries                              Tomorrow 14:30
+[>] 🔴 Q1 Finish report                              Today 10:00
+[X] 🟡 Q3 Call John                                  2024-12-20 09:30
 ```
 
-### Setting Up for Easy Access (Windows)
+**Status Symbols:**
 
-After building, you have several options to run the application:
+- `[ ]` = Todo (Yellow)
+- `[>]` = In Progress (Blue)
+- `[X]` = Done (Green)
 
-#### Option 1: Run Directly
+**Priority Badges:**
 
-Navigate to the directory and run:
+- 🔴 Q1 = Urgent & Important (Do First)
+- 🟢 Q2 = Not Urgent & Important (Plan/Schedule)
+- 🟡 Q3 = Urgent & Not Important (Delegate)
+- ⚪ Q4 = Not Urgent & Not Important (Eliminate)
 
-```cmd
-cd target\release
-todo.exe
-```
+**Due Date Colors:**
 
-#### Option 2: Add to PATH (Recommended)
+- **Red** = Overdue
+- **Yellow** = Due today
+- **Green** = Due soon (tomorrow or this week)
+- **Cyan** = Future dates
+- **White** = Completed (stops showing urgency)
 
-This allows you to run `todo` from anywhere in your terminal.
+## 📋 Common Tasks
 
-1. **Copy the executable to a permanent location:**
+### Add a Task with Everything
 
-   ```cmd
-   mkdir C:\DevTools
-   copy target\release\todo.exe C:\DevTools\
-   ```
+1. Press `a` → Type title → Press Enter
+2. Type description → Press Enter
+3. Press `t` → Pick date on calendar → Press Enter
+4. Type time (like 14:30) → Press Enter
+5. Press `p` to set priority
+6. Done! 🎉
 
-````
+### Set a Due Date
 
-2. **Add to System PATH:**
-   - Press `Win + X` and select "System"
-   - Click "Advanced system settings"
-   - Click "Environment Variables"
-   - Under "User variables" (or "System variables" for all users), find "Path"
-   - Click "Edit"
-   - Click "New"
-   - Add: `C:\DevTools`
-   - Click "OK" on all windows
+1. Select a task → Press `t`
+2. Use arrow keys to navigate calendar
+3. Press `n` for next month, `p` for previous month
+4. Press Enter → Type time (14:30) → Press Enter
 
-3. **Restart your terminal** (Command Prompt, PowerShell, or Windows Terminal)
+### Search for a Task
 
-4. **Run from anywhere:**
-   ```cmd
-   todo
-````
+1. Press `s` anywhere
+2. Start typing - results appear instantly
+3. Press **Tab** or **Enter** to switch to results
+4. Use **j/k** or arrow keys to navigate results
+5. Press **Tab** to go back to typing
+6. Press Enter to view details
+7. Press Esc to exit search
 
-#### Option 3: Create a Desktop Shortcut
+**Tip:** Search has two modes:
 
-1. Right-click on `todo.exe`
-2. Select "Create shortcut"
-3. Move the shortcut to your Desktop
-4. Double-click the shortcut to launch
+- **Typing Mode** (Yellow border) - All keys add to search
+- **Navigation Mode** (Yellow border on results) - Use j/k to navigate, p/t/d for actions
 
-### Quick Build and Run
+### View Upcoming Tasks
 
-```bash
-cargo run --release
-```
+Just look at the "Upcoming Tasks" panel on the homepage! It shows your next 5 deadlines.
 
-## Usage
-
-### Starting the Application
-
-**From the build directory:**
-
-```bash
-./target/release/todo  # Linux/Mac
-.\target\release\todo.exe  # Windows
-```
-
-**If added to PATH:**
-
-```bash
-todo
-```
-
-**On Windows (if not in PATH):**
-
-- Navigate to the folder containing `todo.exe`
-- Double-click `todo.exe`
-- Or run from Command Prompt/PowerShell in that directory
+## ⌨️ All Keyboard Shortcuts
 
 ### Project View
 
-When you start the application, you'll see the project list.
-
-**Keyboard Shortcuts:**
-
-| Key            | Action                    |
-| -------------- | ------------------------- |
-| `↑/↓` or `j/k` | Navigate through projects |
-| `Enter`        | Open selected project     |
-| `n`            | Create new project        |
-| `r`            | Rename selected project   |
-| `d`            | Delete selected project   |
-| `q` or `Esc`   | Quit application          |
+| Key            | Action         |
+| -------------- | -------------- |
+| `↑/↓` or `j/k` | Navigate       |
+| `Enter`        | Open project   |
+| `n`            | New project    |
+| `r`            | Rename project |
+| `d`            | Delete project |
+| `s`            | Search tasks   |
+| `q` or `Esc`   | Quit           |
 
 ### Task View
 
-After opening a project, you'll see its task list.
+| Key             | Action                             |
+| --------------- | ---------------------------------- |
+| `↑/↓` or `j/k`  | Navigate                           |
+| `Enter`         | View details                       |
+| `a`             | Add task                           |
+| `e`             | Edit task                          |
+| `d`             | Delete task                        |
+| `Space` or `c`  | Cycle status                       |
+| `1` / `2` / `3` | Set status (Todo/In Progress/Done) |
+| `p`             | Cycle priority                     |
+| `t`             | Set due date                       |
+| `x`             | Clear due date                     |
+| `s`             | Search                             |
+| `Backspace`     | Go back                            |
+| `q` or `Esc`    | Quit                               |
 
-**Keyboard Shortcuts:**
+### Calendar (When Setting Due Date)
 
-| Key                      | Action                                        |
-| ------------------------ | --------------------------------------------- |
-| `↑/↓` or `j/k`           | Navigate through tasks                        |
-| `Enter`                  | View selected task details                    |
-| `a`                      | Add new task (title → description)            |
-| `e`                      | Edit selected task (title → description)      |
-| `d`                      | Delete selected task                          |
-| `Space` or `c`           | Cycle task status (Todo → In Progress → Done) |
-| `1`                      | Set task to Todo                              |
-| `2`                      | Set task to In Progress                       |
-| `3`                      | Set task to Done/Completed                    |
-| `p`                      | Cycle task priority (Q1 → Q2 → Q3 → Q4)       |
-| `Backspace`, `b`, or `h` | Go back to project list                       |
-| `q` or `Esc`             | Quit application                              |
+| Key                    | Action         |
+| ---------------------- | -------------- |
+| `Arrow keys` or `hjkl` | Navigate days  |
+| `n`                    | Next month     |
+| `p`                    | Previous month |
+| `Enter`                | Confirm date   |
+| `Esc`                  | Cancel         |
 
-### Adding and Editing Tasks
+### Search Mode
 
-When you add or edit a task, you'll go through a two-step process:
+| Key            | When Typing          | When Navigating       |
+| -------------- | -------------------- | --------------------- |
+| `Tab`          | Switch to navigation | Switch to typing      |
+| `Enter`        | Switch to navigation | View task details     |
+| `Esc`          | Clear search / Exit  | Back to typing / Exit |
+| `q`            | Add to search        | Quit app              |
+| Type letters   | Add to search        | (doesn't work)        |
+| `j/k` or `↑/↓` | Add to search        | Navigate results      |
+| `Space` or `c` | Add to search        | Change status         |
+| `p`            | Add to search        | Change priority       |
+| `t`            | Add to search        | Set due date          |
+| `d`            | Add to search        | Delete task           |
+| `Backspace`    | Delete character     | (doesn't work)        |
 
-**Adding a New Task:**
+**How it works:**
 
-1. Press `a` to start adding a task
-2. Enter the task **title** and press `Enter`
-3. Enter the task **description** (optional) and press `Enter` to save
-4. Press `Esc` at any step to cancel
+- **Typing Mode** (Yellow search box border) - All keys add to your search query (including 'q')
+- **Navigation Mode** (Yellow results border) - Use shortcuts to interact with tasks ('q' quits)
+- Press **Tab** to switch between modes anytime
 
-**Editing a Task:**
+## 💾 Where is My Data?
 
-1. Select a task and press `e` to edit
-2. Edit the task **title** and press `Enter`
-3. Edit the task **description** (leave empty to remove) and press `Enter` to save
-4. Press `Esc` at any step to cancel changes
-
-**Viewing Task Details:**
-
-- Press `Enter` on any task to view its full details including title, status, priority, and description
-- Press `Enter`, `Backspace`, or `h` to return to the task list
-
-### Input Mode
-
-When adding or editing projects/tasks, you enter input mode.
-
-**Keyboard Shortcuts:**
-
-| Key           | Action                     |
-| ------------- | -------------------------- |
-| `Enter`       | Save and exit input mode   |
-| `Esc`         | Cancel and exit input mode |
-| `Backspace`   | Delete last character      |
-| Any character | Type into input buffer     |
-
-## Project Structure
-
-```
-rust/
-├── src/
-│   ├── main.rs       # Application entry point
-│   ├── app.rs        # Core application state and logic
-│   ├── event.rs      # Keyboard event handling
-│   ├── ui.rs         # Terminal UI rendering
-│   ├── task.rs       # Task and Project data structures
-│   └── storage.rs    # JSON file persistence
-├── target/
-│   └── release/
-│       └── todo.exe  # Built executable (Windows)
-├── Cargo.toml        # Rust dependencies
-├── Cargo.lock        # Dependency lock file
-└── README.md         # This file
-```
-
-## Data Storage
-
-All data is automatically saved to a JSON file:
+Your tasks are saved automatically to:
 
 - **Windows**: `%APPDATA%\dev-todo\projects.json`
-- **Linux**: `~/.config/dev-todo/projects.json`
-- **macOS**: `~/.config/dev-todo/projects.json`
+- **Mac/Linux**: `~/.config/dev-todo/projects.json`
 
-The data is saved automatically whenever you make changes.
+## 🛠️ Advanced Setup
 
-## Dependencies
+### Add to PATH (Windows)
 
-- **ratatui** (0.27) - Terminal user interface framework
-- **crossterm** (0.28) - Cross-platform terminal manipulation
-- **serde** (1.0) - Serialization framework
-- **serde_json** (1.0) - JSON serialization
-- **dirs** (5.0) - System directory paths
+So you can run `todo` from anywhere:
 
-## Customization
+1. Copy `todo.exe` to `C:\DevTools\`
+2. Add `C:\DevTools` to your PATH environment variable
+3. Restart your terminal
+4. Type `todo` anywhere!
 
-### Changing Colors
+### Add to PATH (Mac/Linux)
 
-Edit `src/task.rs` to customize status colors:
-
-```rust
-pub fn display(&self) -> (String, Color) {
-    let (status_symbol, color) = match self.status {
-        Status::Todo => ("[ ]", Color::Yellow),        // Change Yellow to your color
-        Status::InProgress => ("[>]", Color::Blue),    // Change Blue to your color
-        Status::Done => ("[X]", Color::Green),         // Change Green to your color
-    };
-    // ...
-}
+```bash
+sudo cp target/release/todo /usr/local/bin/
 ```
 
-### Changing Icons
+## 🎨 Customization
 
-Edit `src/ui.rs` to customize folder icons:
+Want different colors? Edit `src/task.rs`:
 
 ```rust
-let display = format!("> {}  {}", p.name, task_count);
+Status::Todo => ("[ ]", Color::Yellow),  // Change Yellow
+Status::InProgress => ("[>]", Color::Blue),  // Change Blue
+Status::Done => ("[X]", Color::Green),  // Change Green
 ```
 
-### Data Not Persisting
+## 🐛 Troubleshooting
 
-- Check that the application has write permissions to the config directory
-- Manually create the directory if it doesn't exist:
-  - Windows: `mkdir %APPDATA%\dev-todo`
-  - Linux/Mac: `mkdir -p ~/.config/dev-todo`
+**App won't start?**
 
-### Application Crashes on Startup
-
-- Try deleting the JSON file and restarting (you'll lose your data):
+- Delete the data file (you'll lose your tasks):
   - Windows: Delete `%APPDATA%\dev-todo\projects.json`
-  - Linux/Mac: Delete `~/.config/dev-todo/projects.json`
+  - Mac/Linux: Delete `~/.config/dev-todo/projects.json`
 
-## Contributing
+**Data not saving?**
 
-Contributions are welcome! Feel free to:
+- Make sure the app has permission to write to the config folder
+- Manually create the folder if needed
 
-- Report bugs
-- Suggest new features
+## 📦 Dependencies
+
+- **ratatui** - Beautiful terminal UI
+- **crossterm** - Cross-platform terminal control
+- **chrono** - Date and time handling
+- **fuzzy-matcher** - Fast fuzzy search
+- **serde/serde_json** - Save/load data
+
+## 🤝 Contributing
+
+Found a bug? Have an idea? Contributions welcome!
+
+- Report issues
 - Submit pull requests
-- Improve documentation
+- Suggest features
 
-## License
+## 📄 License
 
-This project is licensed under the MIT License.
+MIT License - See LICENSE file for details
 
-## Acknowledgments
+## 🎯 Tips for Productivity
 
-- Built with [Ratatui](https://github.com/ratatui-org/ratatui) - Rust TUI library
-- Inspired by modern terminal-based productivity tools
-
-## Future Enhancements
-
-- [x] Task priorities (Eisenhower Matrix)
-- [ ] Due dates and reminders
-- [ ] Task filtering and search
-- [ ] Multiple task lists per project
-- [ ] Export to different formats (CSV, Markdown)
-- [x] Task notes/descriptions
-- [ ] Keyboard shortcut customization
-- [ ] Theme customization
-- [ ] Task tags/categories
+1. **Start your day** by checking the "Upcoming Tasks" panel
+2. **Use priorities** to focus on what matters (Q1 first!)
+3. **Search is your friend** - Press `s` when you can't find something
+4. **Set due dates** for everything important
+5. **Review completed tasks** to see your progress
 
 ---
 
 **Made with ❤️ and Rust**
+
+Need help? Press `q` to quit and read this README again! 😊

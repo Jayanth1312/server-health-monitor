@@ -54,11 +54,17 @@ jobs:
         run: |
           Copy-Item target\release\todo.exe todo-windows-x64.exe
 
+      - name: Create checksum
+        shell: pwsh
+        run: |
+          (Get-FileHash todo-windows-x64.exe -Algorithm SHA256).Hash | Out-File -FilePath todo-windows-x64.exe.sha256 -Encoding ASCII
+
       - name: Upload Windows Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
             ./todo-windows-x64.exe
+            ./todo-windows-x64.exe.sha256
 
   build-linux:
     name: Build Linux
@@ -87,17 +93,25 @@ jobs:
           cat >> Cargo.toml << 'EOF'
 
           [package.metadata.deb]
-          maintainer = "Your Name <your.email@example.com>"
-          copyright = "2024, Your Name <your.email@example.com>"
+          maintainer = "Todo App <todo@example.com>"
+          copyright = "2024, Todo App Team"
           license-file = ["LICENSE", "4"]
           extended-description = """\
-          A terminal-based todo application built with Rust.
+          A fast, lightweight, and intuitive terminal-based todo application built with Rust.
+          Features include:
+          - Project-based task organization
+          - Eisenhower Matrix priorities (4 quadrants)
+          - Due dates with visual calendar picker
+          - Fuzzy search across all tasks
+          - Automatic completion tracking
+          - Beautiful TUI with vim-style navigation
           """
           depends = "$auto"
           section = "utility"
           priority = "optional"
           assets = [
               ["target/release/todo", "usr/bin/", "755"],
+              ["README.md", "usr/share/doc/todo/", "644"],
           ]
           EOF
 
@@ -115,12 +129,19 @@ jobs:
       - name: Rename Linux Binary
         run: cp ./target/release/todo ./todo-linux-x64
 
+      - name: Create checksums
+        run: |
+          sha256sum ./todo-linux-x64 > ./todo-linux-x64.sha256
+          sha256sum ./target/debian/*.deb > ./todo-linux.deb.sha256
+
       - name: Upload Linux Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
             ./todo-linux-x64
+            ./todo-linux-x64.sha256
             ./target/debian/*.deb
+            ./todo-linux.deb.sha256
 
   build-macos:
     name: Build macOS
@@ -149,9 +170,16 @@ jobs:
       - name: Rename macOS Binary
         run: cp ./target/release/todo ./todo-macos-x64
 
+      - name: Create checksums
+        run: |
+          shasum -a 256 ./todo-macos-x64 > ./todo-macos-x64.sha256
+          shasum -a 256 ./target/*.dmg > ./todo-macos.dmg.sha256
+
       - name: Upload macOS Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
             ./todo-macos-x64
+            ./todo-macos-x64.sha256
             ./target/*.dmg
+            ./todo-macos.dmg.sha256

@@ -1,5 +1,6 @@
 use ratatui::style::Color;
 use serde::{Deserialize, Serialize};
+use chrono::{DateTime, Local};
 
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub enum Status {
@@ -53,6 +54,10 @@ pub struct Task {
     pub priority: Priority,
     #[serde(default)]
     pub description: Option<String>,
+    #[serde(default)]
+    pub due_date: Option<DateTime<Local>>,
+    #[serde(default)]
+    pub completed_at: Option<DateTime<Local>>,
 }
 
 fn default_priority() -> Priority {
@@ -66,14 +71,22 @@ impl Task {
             status: Status::Todo,
             priority: Priority::NotUrgentImportant, // Default to Q2
             description: None,
+            due_date: None,
+            completed_at: None,
         }
     }
 
     pub fn cycle_status(&mut self) {
         self.status = match self.status {
             Status::Todo => Status::InProgress,
-            Status::InProgress => Status::Done,
-            Status::Done => Status::Todo,
+            Status::InProgress => {
+                self.completed_at = Some(Local::now());
+                Status::Done
+            }
+            Status::Done => {
+                self.completed_at = None;
+                Status::Todo
+            }
         };
     }
 
@@ -88,10 +101,101 @@ impl Task {
             Status::Done => ("[X]", Color::Green),
         };
         let (priority_symbol, _) = self.priority.display();
+
         (
             format!("{} {} {}", status_symbol, priority_symbol, self.title),
             status_color,
         )
+    }
+
+    pub fn get_due_display(&self) -> Option<(String, Color)> {
+        self.due_date.as_ref().map(|due| {
+            // If task is completed, show due date in white/gray
+            if self.status == Status::Done {
+                let text = due.format("%Y-%m-%d %H:%M").to_string();
+                return (text, Color::White);
+            }
+
+            let now = Local::now();
+            let diff = *due - now;
+
+            let (text, color) = if due < &now {
+                let days = -diff.num_days();
+                let text = if days == 0 {
+                    format!("Overdue {}", due.format("%H:%M"))
+                } else if days == 1 {
+                    format!("Overdue 1 day")
+                } else {
+                    format!("Overdue {} days", days)
+                };
+                (text, Color::Red)
+            } else if due.date_naive() == now.date_naive() {
+                (format!("Today {}", due.format("%H:%M")), Color::Yellow)
+            } else if diff.num_days() == 1 {
+                (format!("Tomorrow {}", due.format("%H:%M")), Color::Green)
+            } else if diff.num_days() <= 7 {
+                (format!("{} {}", due.format("%a"), due.format("%H:%M")), Color::Green)
+            } else {
+                (due.format("%Y-%m-%d %H:%M").to_string(), Color::Cyan)
+            };
+
+            (text, color)
+        })
+    }
+
+    pub fn is_overdue(&self) -> bool {
+        if let Some(due) = &self.due_date {
+            due < &Local::now()
+        } else {
+            false
+        }
+    }
+
+    pub fn is_due_today(&self) -> bool {
+        if let Some(due) = &self.due_date {
+            due.date_naive() == Local::now().date_naive()
+        } else {
+            false
+        }
+    }
+
+
+
+    pub fn format_due_date(&self) -> Option<String> {
+        self.due_date.as_ref().map(|due| {
+            let now = Local::now();
+            let diff = *due - now;
+
+            if due < &now {
+                let days = -diff.num_days();
+                if days == 0 {
+                    format!("Overdue by {} hours", -diff.num_hours())
+                } else if days == 1 {
+                    "Overdue by 1 day".to_string()
+                } else {
+                    format!("Overdue by {} days", days)
+                }
+            } else if due.date_naive() == now.date_naive() {
+                format!("Due today at {}", due.format("%H:%M"))
+            } else if diff.num_days() == 1 {
+                format!("Due tomorrow at {}", due.format("%H:%M"))
+            } else if diff.num_days() <= 7 {
+                format!("Due {} at {}", due.format("%A"), due.format("%H:%M"))
+            } else {
+                due.format("Due %Y-%m-%d %H:%M").to_string()
+            }
+        })
+    }
+
+    pub fn was_completed_on_time(&self) -> Option<bool> {
+        if self.status != Status::Done {
+            return None;
+        }
+
+        match (&self.due_date, &self.completed_at) {
+            (Some(due), Some(completed)) => Some(completed <= due),
+            _ => None,
+        }
     }
 }
 

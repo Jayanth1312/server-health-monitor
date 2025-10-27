@@ -1,4 +1,5 @@
 mod app;
+mod calendar;
 mod event;
 mod storage;
 mod task;
