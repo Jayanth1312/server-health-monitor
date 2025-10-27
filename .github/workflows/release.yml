@@ -3,7 +3,7 @@ name: Release
 on:
   push:
     tags:
-      - 'v*'
+      - "v*"
   workflow_dispatch:
 
 env:
@@ -210,6 +210,11 @@ jobs:
       - name: Strip binary
         run: strip target/release/todo
 
+      - name: Create macOS App Bundle and DMG
+        run: |
+          chmod +x build-macos.sh
+          ./build-macos.sh
+
       - name: Upload macOS Binary
         uses: actions/upload-release-asset@v1
         env:
@@ -219,3 +224,13 @@ jobs:
           asset_path: ./target/release/todo
           asset_name: todo-macos-x64
           asset_content_type: application/x-executable
+
+      - name: Upload macOS DMG Installer
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ needs.create-release.outputs.upload_url }}
+          asset_path: ./target/Todo-0.1.0-macOS.dmg
+          asset_name: Todo-0.1.0-macOS.dmg
+          asset_content_type: application/x-apple-diskimage

@@ -73,6 +73,45 @@ target/release/todo.exe (Windows)
 target/release/todo (Linux/Mac)
 ```
 
+### Creating a macOS Installer (.dmg)
+
+**Note: This must be done on a Mac computer (macOS required for creating .dmg files)**
+
+If you're on Windows and want to share with a Mac user, your friend will need to build it themselves, OR you can use a Mac/VM to create the installer.
+
+1. On macOS, navigate to the project directory:
+
+```bash
+cd rust
+```
+
+2. Make the build script executable and run it:
+
+```bash
+chmod +x build-macos.sh
+./build-macos.sh
+```
+
+3. The installer will be created at:
+
+```
+target/Todo-0.1.0-macOS.dmg
+```
+
+4. Share this `.dmg` file with your friend. They can:
+   - Double-click to mount the disk image
+   - Drag the Todo app to their Applications folder
+   - Launch it from Applications or Spotlight
+
+**Alternative for Mac users without building:**
+
+If you just want to run the app without creating an installer, simply:
+
+```bash
+cargo build --release
+./target/release/todo
+```
+
 ### Setting Up for Easy Access (Windows)
 
 After building, you have several options to run the application:
