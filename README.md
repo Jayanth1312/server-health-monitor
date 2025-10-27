@@ -19,6 +19,11 @@ A fast, lightweight, and intuitive terminal-based todo application built with Ru
 - Three status levels: Todo, In Progress, Completed
 - Quick status cycling with keyboard shortcuts
 - Color-coded task visualization
+- **Task priorities using Eisenhower Matrix** - Four priority quadrants:
+  - 🔴 **Q1** - Urgent & Important (Do First)
+  - 🟢 **Q2** - Not Urgent & Important (Schedule)
+  - 🟡 **Q3** - Urgent & Not Important (Delegate)
+  - ⚪ **Q4** - Not Urgent & Not Important (Eliminate)
 
 🎨 **Beautiful TUI Interface**
 
@@ -222,6 +227,7 @@ After opening a project, you'll see its task list.
 | `1`                      | Set task to Todo                              |
 | `2`                      | Set task to In Progress                       |
 | `3`                      | Set task to Done/Completed                    |
+| `p`                      | Cycle task priority (Q1 → Q2 → Q3 → Q4)       |
 | `Backspace`, `b`, or `h` | Go back to project list                       |
 | `q` or `Esc`             | Quit application                              |
 
@@ -333,7 +339,7 @@ This project is licensed under the MIT License.
 
 ## Future Enhancements
 
-- [ ] Task priorities
+- [x] Task priorities (Eisenhower Matrix)
 - [ ] Due dates and reminders
 - [ ] Task filtering and search
 - [ ] Multiple task lists per project

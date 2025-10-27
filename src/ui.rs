@@ -299,17 +299,15 @@ fn render_task_help(f: &mut Frame, area: ratatui::layout::Rect) {
                     .fg(Color::Magenta)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Backspace/b/h"),
-        ]),
-        Line::from(vec![
+            Span::raw("Backspace/b/h "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
             Span::styled(
-                "Add Task: ",
+                "Add: ",
                 Style::default()
                     .fg(Color::Green)
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw("a "),
-            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
             Span::styled(
                 "Edit: ",
                 Style::default()
@@ -317,7 +315,6 @@ fn render_task_help(f: &mut Frame, area: ratatui::layout::Rect) {
                     .add_modifier(Modifier::BOLD),
             ),
             Span::raw("e "),
-            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
             Span::styled(
                 "Delete: ",
                 Style::default()
@@ -333,14 +330,36 @@ fn render_task_help(f: &mut Frame, area: ratatui::layout::Rect) {
                     .fg(Color::Cyan)
                     .add_modifier(Modifier::BOLD),
             ),
-            Span::raw("Space/c (cycle) "),
+            Span::raw("Space/c "),
             Span::styled("│ ", Style::default().fg(Color::DarkGray)),
             Span::styled("1", Style::default().fg(Color::Yellow)),
             Span::raw(" Todo "),
             Span::styled("2", Style::default().fg(Color::Blue)),
-            Span::raw(" Progress "),
+            Span::raw(" InProgress "),
             Span::styled("3", Style::default().fg(Color::Green)),
-            Span::raw(" Done"),
+            Span::raw(" Done "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::styled(
+                "Priority: ",
+                Style::default()
+                    .fg(Color::Cyan)
+                    .add_modifier(Modifier::BOLD),
+            ),
+            Span::styled("p", Style::default().fg(Color::White)),
+        ]),
+        Line::from(vec![
+            Span::styled("🔴 Q1", Style::default().fg(Color::Red)),
+            Span::raw(" Urgent & Important (Do First) "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::styled("🟢 Q2", Style::default().fg(Color::Green)),
+            Span::raw(" Not Urgent & Important (Schedule)"),
+        ]),
+        Line::from(vec![
+            Span::styled("🟡 Q3", Style::default().fg(Color::Yellow)),
+            Span::raw(" Urgent & Not Important (Delegate) "),
+            Span::styled("│ ", Style::default().fg(Color::DarkGray)),
+            Span::styled("⚪ Q4", Style::default().fg(Color::Gray)),
+            Span::raw(" Not Urgent & Not Important (Eliminate)"),
         ]),
         Line::from(vec![
             Span::styled(

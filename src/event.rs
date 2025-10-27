@@ -56,6 +56,7 @@ fn handle_task_mode(app: &mut App, key_code: KeyCode) -> bool {
         KeyCode::Down | KeyCode::Char('j') => app.next_task(),
         KeyCode::Up | KeyCode::Char('k') => app.previous_task(),
         KeyCode::Char(' ') | KeyCode::Char('c') => app.cycle_status(),
+        KeyCode::Char('p') => app.cycle_priority(),
         KeyCode::Char('d') => app.delete_task(),
         KeyCode::Char('a') => app.start_adding_task(),
         KeyCode::Char('e') => app.start_editing_task(),

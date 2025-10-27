@@ -8,10 +8,44 @@ pub enum Status {
     Done,
 }
 
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub enum Priority {
+    UrgentImportant,      // Quadrant 1: Do First
+    NotUrgentImportant,   // Quadrant 2: Schedule
+    UrgentNotImportant,   // Quadrant 3: Delegate
+    NotUrgentNotImportant, // Quadrant 4: Eliminate
+}
+
+impl Priority {
+    pub fn display(&self) -> (&str, Color) {
+        match self {
+            Priority::UrgentImportant => ("🔴 Q1", Color::Red),
+            Priority::NotUrgentImportant => ("🟢 Q2", Color::Green),
+            Priority::UrgentNotImportant => ("🟡 Q3", Color::Yellow),
+            Priority::NotUrgentNotImportant => ("⚪ Q4", Color::Gray),
+        }
+    }
+
+    pub fn next(&self) -> Self {
+        match self {
+            Priority::UrgentImportant => Priority::NotUrgentImportant,
+            Priority::NotUrgentImportant => Priority::UrgentNotImportant,
+            Priority::UrgentNotImportant => Priority::NotUrgentNotImportant,
+            Priority::NotUrgentNotImportant => Priority::UrgentImportant,
+        }
+    }
+
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Task {
     pub title: String,
     pub status: Status,
+    #[serde(default = "default_priority")]
+    pub priority: Priority,
+}
+
+fn default_priority() -> Priority {
+    Priority::NotUrgentImportant
 }
 
 impl Task {
@@ -19,6 +53,7 @@ impl Task {
         Task {
             title: title.to_string(),
             status: Status::Todo,
+            priority: Priority::NotUrgentImportant, // Default to Q2
         }
     }
 
@@ -30,13 +65,21 @@ impl Task {
         };
     }
 
+    pub fn cycle_priority(&mut self) {
+        self.priority = self.priority.next();
+    }
+
     pub fn display(&self) -> (String, Color) {
-        let (status_symbol, color) = match self.status {
+        let (status_symbol, status_color) = match self.status {
             Status::Todo => ("[ ]", Color::Yellow),
             Status::InProgress => ("[>]", Color::Blue),
             Status::Done => ("[X]", Color::Green),
         };
-        (format!("{} {}", status_symbol, self.title), color)
+        let (priority_symbol, _) = self.priority.display();
+        (
+            format!("{} {} {}", status_symbol, priority_symbol, self.title),
+            status_color,
+        )
     }
 }
 

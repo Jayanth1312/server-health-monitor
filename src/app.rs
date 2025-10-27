@@ -110,6 +110,15 @@ impl App {
         }
     }
 
+    pub fn cycle_priority(&mut self) {
+        if let Some(project) = self.projects.get_mut(self.selected_project) {
+            if let Some(task) = project.tasks.get_mut(self.selected_task) {
+                task.cycle_priority();
+                let _ = self.save();
+            }
+        }
+    }
+
     pub fn set_status(&mut self, status: Status) {
         if let Some(project) = self.projects.get_mut(self.selected_project) {
             if let Some(task) = project.tasks.get_mut(self.selected_task) {
