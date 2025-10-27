@@ -49,63 +49,16 @@ jobs:
       - name: Build Release
         run: cargo build --release
 
-      - name: Create Windows Installer with WiX
+      - name: Rename Windows EXE
         shell: pwsh
         run: |
-          # Install WiX
-          dotnet tool install --global wix
-          wix extension add WixToolset.UI.wixext
-
-          # Create WiX source file
-          $version = "${{ needs.create-release.outputs.version }}"
-          if ([string]::IsNullOrEmpty($version)) { $version = "0.1.0" }
-
-          @"
-          <?xml version="1.0" encoding="UTF-8"?>
-          <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-            <Product Id="*" Name="Todo App" Language="1033" Version="$version"
-                     Manufacturer="Todo App" UpgradeCode="12345678-1234-1234-1234-123456789012">
-              <Package InstallerVersion="200" Compressed="yes" InstallScope="perMachine" />
-              <MajorUpgrade DowngradeErrorMessage="A newer version is already installed." />
-              <MediaTemplate EmbedCab="yes" />
-
-              <Feature Id="ProductFeature" Title="Todo App" Level="1">
-                <ComponentGroupRef Id="ProductComponents" />
-              </Feature>
-
-              <Directory Id="TARGETDIR" Name="SourceDir">
-                <Directory Id="ProgramFiles64Folder">
-                  <Directory Id="INSTALLFOLDER" Name="TodoApp" />
-                </Directory>
-                <Directory Id="ProgramMenuFolder">
-                  <Directory Id="ApplicationProgramsFolder" Name="Todo App"/>
-                </Directory>
-              </Directory>
-
-              <ComponentGroup Id="ProductComponents" Directory="INSTALLFOLDER">
-                <Component Id="TodoExe" Guid="*">
-                  <File Id="TodoExeFile" Source="target\release\todo.exe" KeyPath="yes">
-                    <Shortcut Id="TodoStartMenuShortcut" Directory="ApplicationProgramsFolder"
-                              Name="Todo App" WorkingDirectory="INSTALLFOLDER"
-                              Icon="TodoIcon.exe" IconIndex="0" Advertise="yes" />
-                  </File>
-                </Component>
-              </ComponentGroup>
-
-              <Icon Id="TodoIcon.exe" SourceFile="target\release\todo.exe" />
-            </Product>
-          </Wix>
-          "@ | Out-File -FilePath installer.wxs -Encoding UTF8
-
-          # Build the installer
-          wix build installer.wxs -o todo-installer.msi
+          Copy-Item target\release\todo.exe todo-windows-x64.exe
 
       - name: Upload Windows Assets
         uses: softprops/action-gh-release@v1
         with:
           files: |
-            ./target/release/todo.exe
-            ./todo-installer.msi
+            ./todo-windows-x64.exe
 
   build-linux:
     name: Build Linux
