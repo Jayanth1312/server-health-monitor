@@ -5,6 +5,8 @@ A fast and beautiful terminal-based todo app built with Rust. Manage your tasks 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)
 
+![todo-rust](./image.png)
+
 ## ✨ Features
 
 - **📁 Projects** - Organize tasks into projects
