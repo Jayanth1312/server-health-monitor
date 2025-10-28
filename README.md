@@ -60,6 +60,7 @@ Press 'Backspace' to go back
 
 ### Understanding Task Display
 
+![task_display](./task_display.png)
 Tasks look like this:
 
 ```
@@ -102,12 +103,16 @@ Tasks look like this:
 
 ### Set a Due Date
 
+![due_date](./due_date.png)
+
 1. Select a task → Press `t`
 2. Use arrow keys to navigate calendar
 3. Press `n` for next month, `p` for previous month
 4. Press Enter → Type time (14:30) → Press Enter
 
 ### Search for a Task
+
+![search_task](./search_task.png)
 
 1. Press `s` anywhere
 2. Start typing - results appear instantly
