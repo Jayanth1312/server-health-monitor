@@ -7,8 +7,13 @@ import sys
 import time
 import shutil
 import argparse
+import platform
 import subprocess
 from pathlib import Path
+
+IS_WINDOWS = platform.system() == "Windows"
+IS_MACOS   = platform.system() == "Darwin"
+IS_LINUX   = platform.system() == "Linux"
 
 from loguru import logger
 
@@ -28,11 +33,16 @@ def _resolve_log_path() -> Path:
     if override:
         return Path(override).expanduser()
 
-    # Running as root (e.g. systemd service, sudo) → system dir
+    if IS_WINDOWS:
+        base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
+        return Path(base) / "SHM" / "monitor.log"
+
+    if IS_MACOS:
+        return Path.home() / "Library" / "Logs" / "shm" / "monitor.log"
+
+    # Linux: root → system dir, user → XDG state
     if hasattr(os, "geteuid") and os.geteuid() == 0:
         return Path("/var/log/shm/monitor.log")
-
-    # Regular user → XDG state dir
     state = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
     return Path(state) / "shm" / "monitor.log"
 
@@ -76,6 +86,11 @@ _DEFAULT_CFG = _PKG_DIR / "config.default.yaml"
 
 # ── config path resolution ────────────────────────────────────────────────
 def _user_config_path() -> Path:
+    if IS_WINDOWS:
+        base = os.environ.get("APPDATA") or str(Path.home() / "AppData" / "Roaming")
+        return Path(base) / "SHM" / "config.yaml"
+    if IS_MACOS:
+        return Path.home() / "Library" / "Application Support" / "shm" / "config.yaml"
     base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
     return Path(base) / "shm" / "config.yaml"
 
@@ -89,11 +104,9 @@ def _resolve_config_path(explicit):
             sys.exit(1)
         return p
 
-    candidates = [
-        Path.cwd() / "config.yaml",
-        _user_config_path(),
-        Path("/etc/shm/config.yaml"),
-    ]
+    candidates = [Path.cwd() / "config.yaml", _user_config_path()]
+    if IS_LINUX:
+        candidates.append(Path("/etc/shm/config.yaml"))
     for c in candidates:
         if c.exists():
             return c
@@ -118,7 +131,17 @@ def _resolve_config_path(explicit):
 # service installer / uninstaller
 # ══════════════════════════════════════════════════════════════════════════
 
+def _require_linux(action: str) -> None:
+    if not IS_LINUX:
+        print(f"❌  '{action}' is Linux-only (uses systemd).")
+        print(f"    On {platform.system()}, run the daemon in the foreground instead:")
+        print(f"        monitor --daemon")
+        print(f"    Or set up your OS-native startup mechanism (Task Scheduler / launchd).")
+        sys.exit(1)
+
+
 def _require_root(action: str) -> None:
+    _require_linux(action)
     if os.geteuid() != 0:
         print(f"❌  '{action}' requires root.  Run with sudo:")
         print(f"    sudo monitor {action}")
@@ -304,7 +327,7 @@ def run_daemon(config_path: str):
 def main():
     """Main CLI entry point."""
     parser = argparse.ArgumentParser(
-        description="Server Health Monitor — lightweight Linux system monitor",
+        description="Server Health Monitor — lightweight cross-platform system monitor (Linux, macOS, Windows)",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:

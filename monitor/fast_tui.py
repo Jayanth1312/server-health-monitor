@@ -528,7 +528,12 @@ def _cfg_display(value, kind: str) -> str:
 
 def _init_colors() -> None:
     curses.start_color()
-    curses.use_default_colors()
+    try:
+        curses.use_default_colors()
+    except curses.error:
+        # Some terminals (notably Windows conhost via windows-curses) don't
+        # support default colors. Fall back to pair 0 (terminal default).
+        pass
     pairs = {
         C_OK:      (curses.COLOR_GREEN,    -1),
         C_WARN:    (curses.COLOR_YELLOW,   -1),

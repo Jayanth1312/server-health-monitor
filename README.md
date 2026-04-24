@@ -1,19 +1,22 @@
 # 🖥️ Server Health Monitor (SHM)
 
-A lightweight, production-ready system health monitor for Linux servers. Beautiful terminal UI and email alerts — all from a single `pip install`.
+A lightweight, production-ready system health monitor for **Linux, macOS, and Windows**. Beautiful terminal UI and email alerts — all from a single `pipx install`.
 
 [![PyPI](https://img.shields.io/pypi/v/server-health-monitor)](https://pypi.org/project/server-health-monitor/)
 [![Python](https://img.shields.io/pypi/pyversions/server-health-monitor)](https://pypi.org/project/server-health-monitor/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
+![SHM TUI overview](images/image.png)
+
 ---
 
 ## ✨ Features
 
+- **Cross-platform** — Runs on Linux, macOS, and Windows (uses OS-native config/log paths on each)
 - **Interactive TUI** — Full-screen terminal dashboard (like `htop`, but for everything)
 - **Email Alerts** — Get notified when CPU, memory, disk, or swap cross thresholds
-- **Auto-start on Boot** — One command to install as a systemd service
-- **Zero Config** — Works out of the box with sensible defaults
+- **Auto-start on Boot** — One command to install as a systemd service (Linux)
+- **Zero Config** — Works out of the box; a default config is auto-created on first run
 - **Lightweight** — Only `psutil`, `PyYAML`, `loguru`, and `pydantic` as core dependencies
 
 ---
@@ -127,15 +130,47 @@ Or declaratively via `environment.systemPackages = [ pkgs.pipx ];`.
 <summary><strong>macOS</strong></summary>
 
 ```bash
+# with Homebrew (recommended)
 brew install pipx
 pipx ensurepath
+
+# or via the system python3
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
 ```
+Open a new terminal so the updated PATH is picked up, then `pipx install server-health-monitor`.
 </details>
 
 <details>
-<summary><strong>Any distro (fallback — install pipx via pip)</strong></summary>
+<summary><strong>Windows (PowerShell)</strong></summary>
 
-If your distro doesn't ship `pipx`:
+Install Python 3.9+ from [python.org](https://www.python.org/downloads/windows/) (tick "Add python.exe to PATH" in the installer), then:
+
+```powershell
+python -m pip install --user pipx
+python -m pipx ensurepath
+# close and reopen PowerShell, then:
+pipx install server-health-monitor
+monitor
+```
+
+Alternatively, via [Scoop](https://scoop.sh/) or [winget](https://learn.microsoft.com/windows/package-manager/winget/):
+
+```powershell
+# Scoop
+scoop install pipx ; pipx ensurepath
+
+# winget
+winget install --id pypa.pipx ; pipx ensurepath
+```
+
+> The Windows TUI uses [`windows-curses`](https://pypi.org/project/windows-curses/), which is installed automatically. Works best in **Windows Terminal** or **PowerShell 7+** — legacy `conhost.exe` may render some Unicode glyphs as tofu.
+</details>
+
+<details>
+<summary><strong>Any OS (fallback — install pipx via pip)</strong></summary>
+
+If your OS doesn't ship `pipx`:
 
 ```bash
 python3 -m pip install --user pipx
@@ -173,6 +208,32 @@ pipx upgrade server-health-monitor
 ```bash
 pipx uninstall server-health-monitor
 ```
+
+### Platform Support
+
+| Feature                       | Linux | macOS | Windows |
+| ----------------------------- | :---: | :---: | :-----: |
+| TUI dashboard                 |   ✅   |   ✅   |    ✅    |
+| Background daemon (`--daemon`)|   ✅   |   ✅   |    ✅    |
+| Email alerts                  |   ✅   |   ✅   |    ✅    |
+| Metrics / log files           |   ✅   |   ✅   |    ✅    |
+| Boot service (`--install`)    |   ✅   |   —   |    —    |
+| Load averages                 |   ✅   |   ✅   |   n/a¹  |
+
+¹ Windows has no load-average concept; the field is reported as `0.00`.
+
+On **macOS** and **Windows**, use your OS-native scheduler (launchd / Task Scheduler) to run `monitor --daemon` at login if you want it on boot. `--install` only wires up a systemd service on Linux.
+
+**Default paths per OS:**
+
+| | Config | Log |
+|---|---|---|
+| Linux (user)   | `~/.config/shm/config.yaml`                | `~/.local/state/shm/monitor.log`        |
+| Linux (root)   | `/etc/shm/config.yaml`                     | `/var/log/shm/monitor.log`              |
+| macOS          | `~/Library/Application Support/shm/config.yaml` | `~/Library/Logs/shm/monitor.log`   |
+| Windows        | `%APPDATA%\SHM\config.yaml`                | `%LOCALAPPDATA%\SHM\monitor.log`        |
+
+Override the log path anywhere with the `SHM_LOG_FILE` environment variable.
 
 ---
 
@@ -260,13 +321,31 @@ You can also edit the config directly in the TUI — press `6` to go to the **Co
    ```
    You should receive an email within seconds.
 
-> **Important:** The TUI (`monitor`) is display-only. Email alerts are sent by the **daemon** (`monitor --daemon`) or the **systemd service**.
+> **Important:** The TUI (`monitor`) is display-only. Email alerts are sent by the **daemon** (`monitor --daemon`) or the OS-level service you configure below.
+
+### Other SMTP providers
+
+The same `smtp:` block works for any SMTP server — just change `host`, `port`, `username`, `password`, and `use_tls`. Common examples:
+
+| Provider           | host                      | port | use_tls | notes                                                |
+| ------------------ | ------------------------- | ---- | :-----: | ---------------------------------------------------- |
+| Gmail              | `smtp.gmail.com`          | 587  | true    | Requires [App Password](https://myaccount.google.com/apppasswords) |
+| Outlook / Hotmail  | `smtp-mail.outlook.com`   | 587  | true    | Requires App Password if 2FA is on                   |
+| Office 365         | `smtp.office365.com`      | 587  | true    | Must be allowed by tenant admin                      |
+| iCloud             | `smtp.mail.me.com`        | 587  | true    | Use an app-specific password                         |
+| SendGrid           | `smtp.sendgrid.net`       | 587  | true    | username = `apikey`, password = API key              |
+| Mailgun            | `smtp.mailgun.org`        | 587  | true    | SMTP credentials from the Mailgun dashboard          |
+| AWS SES            | `email-smtp.<region>.amazonaws.com` | 587 | true | SMTP credentials (not IAM)                       |
 
 ---
 
-## 🔄 Auto-Start on Boot (systemd)
+## 🔄 Auto-Start on Boot
 
-Install SHM as a system service so the alerting daemon starts automatically on every boot:
+Run `monitor --daemon` at login/boot so alerts fire 24/7, even with no user logged in.
+
+### Linux (systemd)
+
+One-line install — bundles a systemd unit, enables it, and starts it:
 
 ```bash
 sudo monitor --install
@@ -277,26 +356,102 @@ This will:
 - Register and enable a `shm` systemd service
 - Start the daemon immediately
 
-### After Installation
+After installation:
 
 ```bash
-# Edit config (set your SMTP credentials, thresholds, etc.)
+# Edit config (SMTP credentials, thresholds, etc.)
 sudo nano /etc/shm/config.yaml
 
 # Apply changes
 sudo systemctl restart shm
 ```
 
-### Management Commands
+Management commands:
 
 | Command | Description |
 |---|---|
-| `sudo systemctl status shm` | Check if daemon is running |
+| `sudo systemctl status shm`  | Check if daemon is running |
 | `sudo systemctl restart shm` | Restart after config changes |
-| `sudo journalctl -u shm -f` | Watch live logs |
-| `sudo monitor --uninstall` | Remove the service |
+| `sudo journalctl -u shm -f`  | Watch live logs |
+| `sudo monitor --uninstall`   | Remove the service |
 
-> **Note:** The systemd service runs independently. You can still use `monitor` (TUI) at any time for interactive monitoring.
+### macOS (launchd)
+
+`--install` is Linux-only. To run `monitor --daemon` automatically at login, create a LaunchAgent:
+
+1. **Find the full path to `monitor`:**
+   ```bash
+   which monitor
+   # e.g. /Users/you/.local/bin/monitor
+   ```
+
+2. **Create `~/Library/LaunchAgents/com.shm.monitor.plist`:**
+   ```xml
+   <?xml version="1.0" encoding="UTF-8"?>
+   <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
+     "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+   <plist version="1.0">
+   <dict>
+     <key>Label</key>              <string>com.shm.monitor</string>
+     <key>ProgramArguments</key>
+     <array>
+       <string>/Users/you/.local/bin/monitor</string>
+       <string>--daemon</string>
+     </array>
+     <key>RunAtLoad</key>          <true/>
+     <key>KeepAlive</key>          <true/>
+     <key>StandardOutPath</key>    <string>/tmp/shm.out.log</string>
+     <key>StandardErrorPath</key>  <string>/tmp/shm.err.log</string>
+   </dict>
+   </plist>
+   ```
+   Replace `/Users/you/.local/bin/monitor` with the path from step 1.
+
+3. **Load it:**
+   ```bash
+   launchctl load  ~/Library/LaunchAgents/com.shm.monitor.plist   # start
+   launchctl unload ~/Library/LaunchAgents/com.shm.monitor.plist  # stop
+   launchctl list | grep shm                                      # status
+   ```
+
+Config lives at `~/Library/Application Support/shm/config.yaml`. Logs: `~/Library/Logs/shm/monitor.log`.
+
+### Windows (Task Scheduler)
+
+`--install` is Linux-only. On Windows, register a scheduled task that runs `monitor --daemon` at login:
+
+**Option A — PowerShell (one-liner, per-user at login):**
+
+```powershell
+# Find the full path
+$monitor = (Get-Command monitor).Source
+
+# Register a task that runs at logon and restarts on failure
+$action   = New-ScheduledTaskAction    -Execute $monitor -Argument '--daemon'
+$trigger  = New-ScheduledTaskTrigger   -AtLogOn
+$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -RestartCount 3 -RestartInterval (New-TimeSpan -Minutes 1)
+Register-ScheduledTask -TaskName 'SHM Monitor' -Action $action -Trigger $trigger -Settings $settings
+
+# Start it now
+Start-ScheduledTask -TaskName 'SHM Monitor'
+
+# Check status / stop / remove
+Get-ScheduledTask    -TaskName 'SHM Monitor'
+Stop-ScheduledTask   -TaskName 'SHM Monitor'
+Unregister-ScheduledTask -TaskName 'SHM Monitor' -Confirm:$false
+```
+
+**Option B — Task Scheduler GUI:**
+
+1. Open **Task Scheduler** → *Create Task*.
+2. **General** tab: name `SHM Monitor`, tick *Run whether user is logged on or not*.
+3. **Triggers**: *New* → *At log on* (or *At startup*).
+4. **Actions**: *New* → *Start a program* → browse to `monitor.exe` (path from `where.exe monitor`) → arguments `--daemon`.
+5. **Settings**: tick *If the task fails, restart every 1 minute, up to 3 times*.
+
+Config lives at `%APPDATA%\SHM\config.yaml`. Logs: `%LOCALAPPDATA%\SHM\monitor.log`.
+
+> **Note:** On all platforms, the interactive TUI (`monitor`) runs independently of the daemon. You can keep the daemon alerting in the background and launch the TUI any time for a live view.
 
 ---
 
@@ -363,10 +518,18 @@ If you installed in a venv, activate it first: `source path/to/venv/bin/activate
 This is PEP 668 on Kali / Debian / Ubuntu — `pip install` outside a venv is blocked by the OS. Use `pipx install server-health-monitor` (recommended), or install inside a venv. See the [Installation](#-installation) section.
 
 ### Not receiving emails
-- Ensure you are running the **daemon** (`monitor --daemon`) or the **systemd service** — the TUI alone does not send emails.
-- Verify `smtp.enabled: true` in your config.
-- Check that you're using a [Google App Password](https://myaccount.google.com/apppasswords), not your regular password.
-- Check logs: `sudo journalctl -u shm -f` or `tail -f monitor.log`.
+- Ensure the **daemon** is actually running — the TUI alone does not send emails.
+  - **Linux**: `sudo systemctl status shm` (if installed as a service) or run `monitor --daemon` in a shell.
+  - **macOS**: `launchctl list | grep shm`
+  - **Windows**: `Get-ScheduledTask -TaskName 'SHM Monitor'`
+- Verify `smtp.enabled: true` and `alerts.enabled: true` in your config.
+- For Gmail/Outlook/iCloud: use an **app-specific password**, not your login password.
+- Check the log file:
+  - **Linux (service)**: `sudo journalctl -u shm -f`
+  - **Linux (user)**: `tail -f ~/.local/state/shm/monitor.log`
+  - **macOS**: `tail -f ~/Library/Logs/shm/monitor.log`
+  - **Windows (PowerShell)**: `Get-Content -Wait $env:LOCALAPPDATA\SHM\monitor.log`
+- Firewall / port 587 blocked? Try `telnet smtp.gmail.com 587` (or your provider) to confirm the outbound SMTP port is open.
 
 ### Some metrics are missing
 Network connection details and listening ports require elevated privileges:
