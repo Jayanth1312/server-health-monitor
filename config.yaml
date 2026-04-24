@@ -1,0 +1,21 @@
+alerts:
+  cooldown_minutes: 5
+  enabled: true
+  log_file: alerts.jsonl
+collection_interval: 5
+metrics_log: metrics.jsonl
+smtp:
+  enabled: true
+  from_addr: jayanthpaladugu3@gmail.com
+  host: smtp.gmail.com
+  password: wrqa etmg jrsv snkp
+  port: 587
+  to_addrs:
+  - jayanthisworking18@gmail.com
+  use_tls: true
+  username: jayanthpaladugu3@gmail.com
+thresholds:
+  cpu_percent: 85.0
+  disk_percent: 90.0
+  memory_percent: 85.0
+  swap_percent: 80.0

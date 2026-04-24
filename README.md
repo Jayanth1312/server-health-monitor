@@ -1,277 +1,260 @@
-# Todo - Terminal Task Manager
+# 🖥️ Server Health Monitor (SHM)
 
-A fast and beautiful terminal-based todo app built with Rust. Manage your tasks with ease using keyboard shortcuts and a clean interface.
+A lightweight, production-ready system health monitor for Linux servers. Beautiful terminal UI and email alerts — all from a single `pip install`.
 
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Rust](https://img.shields.io/badge/rust-1.70%2B-orange.svg)
-
-![todo-rust](./image.png)
-
-## ✨ Features
-
-- **📁 Projects** - Organize tasks into projects
-- **📝 Tasks** - Add title, description, status, and priority
-- **📅 Due Dates** - Set deadlines with a visual calendar
-- **⏰ Reminders** - See upcoming tasks on the homepage
-- **🔍 Search** - Find tasks instantly with fuzzy search
-- **🎨 Priorities** - Eisenhower Matrix (4 quadrants)
-- **💾 Auto-Save** - Everything saves automatically
-
-## 🚀 Quick Start
-
-### Install Rust (if needed)
-
-Download from [rust-lang.org](https://www.rust-lang.org/)
-
-### Build & Run
-
-```bash
-git clone <repository-url>
-cd rust
-cargo build --release
-./target/release/todo        # Linux/Mac
-.\target\release\todo.exe    # Windows
-```
-
-## 🎮 How to Use
-
-### Main Screen (Projects)
-
-```
-Press 'Enter' to open a project
-Press 'n' to create new project
-Press 's' to search all tasks
-Press 'q' to quit
-```
-
-### Inside a Project (Tasks)
-
-```
-Press 'a' to add a task
-Press 'e' to edit a task
-Press 'd' to delete a task
-Press 'Enter' to view task details
-Press 'Space' to change status (Todo → In Progress → Done)
-Press 'p' to change priority (Q1 → Q2 → Q3 → Q4)
-Press 't' to set due date
-Press 's' to search
-Press 'Backspace' to go back
-```
-
-### Understanding Task Display
-
-![task_display](./task_display.png)
-Tasks look like this:
-
-```
-[ ] 🟢 Q2 Buy groceries                              Tomorrow 14:30
-[>] 🔴 Q1 Finish report                              Today 10:00
-[X] 🟡 Q3 Call John                                  2024-12-20 09:30
-```
-
-**Status Symbols:**
-
-- `[ ]` = Todo (Yellow)
-- `[>]` = In Progress (Blue)
-- `[X]` = Done (Green)
-
-**Priority Badges:**
-
-- 🔴 Q1 = Urgent & Important (Do First)
-- 🟢 Q2 = Not Urgent & Important (Plan/Schedule)
-- 🟡 Q3 = Urgent & Not Important (Delegate)
-- ⚪ Q4 = Not Urgent & Not Important (Eliminate)
-
-**Due Date Colors:**
-
-- **Red** = Overdue
-- **Yellow** = Due today
-- **Green** = Due soon (tomorrow or this week)
-- **Cyan** = Future dates
-- **White** = Completed (stops showing urgency)
-
-## 📋 Common Tasks
-
-### Add a Task with Everything
-
-1. Press `a` → Type title → Press Enter
-2. Type description → Press Enter
-3. Press `t` → Pick date on calendar → Press Enter
-4. Type time (like 14:30) → Press Enter
-5. Press `p` to set priority
-6. Done! 🎉
-
-### Set a Due Date
-
-![due_date](./due_date.png)
-
-1. Select a task → Press `t`
-2. Use arrow keys to navigate calendar
-3. Press `n` for next month, `p` for previous month
-4. Press Enter → Type time (14:30) → Press Enter
-
-### Search for a Task
-
-![search_task](./search_task.png)
-
-1. Press `s` anywhere
-2. Start typing - results appear instantly
-3. Press **Tab** or **Enter** to switch to results
-4. Use **j/k** or arrow keys to navigate results
-5. Press **Tab** to go back to typing
-6. Press Enter to view details
-7. Press Esc to exit search
-
-**Tip:** Search has two modes:
-
-- **Typing Mode** (Yellow border) - All keys add to search
-- **Navigation Mode** (Yellow border on results) - Use j/k to navigate, p/t/d for actions
-
-### View Upcoming Tasks
-
-Just look at the "Upcoming Tasks" panel on the homepage! It shows your next 5 deadlines.
-
-## ⌨️ All Keyboard Shortcuts
-
-### Project View
-
-| Key            | Action         |
-| -------------- | -------------- |
-| `↑/↓` or `j/k` | Navigate       |
-| `Enter`        | Open project   |
-| `n`            | New project    |
-| `r`            | Rename project |
-| `d`            | Delete project |
-| `s`            | Search tasks   |
-| `q` or `Esc`   | Quit           |
-
-### Task View
-
-| Key             | Action                             |
-| --------------- | ---------------------------------- |
-| `↑/↓` or `j/k`  | Navigate                           |
-| `Enter`         | View details                       |
-| `a`             | Add task                           |
-| `e`             | Edit task                          |
-| `d`             | Delete task                        |
-| `Space` or `c`  | Cycle status                       |
-| `1` / `2` / `3` | Set status (Todo/In Progress/Done) |
-| `p`             | Cycle priority                     |
-| `t`             | Set due date                       |
-| `x`             | Clear due date                     |
-| `s`             | Search                             |
-| `Backspace`     | Go back                            |
-| `q` or `Esc`    | Quit                               |
-
-### Calendar (When Setting Due Date)
-
-| Key                    | Action         |
-| ---------------------- | -------------- |
-| `Arrow keys` or `hjkl` | Navigate days  |
-| `n`                    | Next month     |
-| `p`                    | Previous month |
-| `Enter`                | Confirm date   |
-| `Esc`                  | Cancel         |
-
-### Search Mode
-
-| Key            | When Typing          | When Navigating       |
-| -------------- | -------------------- | --------------------- |
-| `Tab`          | Switch to navigation | Switch to typing      |
-| `Enter`        | Switch to navigation | View task details     |
-| `Esc`          | Clear search / Exit  | Back to typing / Exit |
-| `q`            | Add to search        | Quit app              |
-| Type letters   | Add to search        | (doesn't work)        |
-| `j/k` or `↑/↓` | Add to search        | Navigate results      |
-| `Space` or `c` | Add to search        | Change status         |
-| `p`            | Add to search        | Change priority       |
-| `t`            | Add to search        | Set due date          |
-| `d`            | Add to search        | Delete task           |
-| `Backspace`    | Delete character     | (doesn't work)        |
-
-**How it works:**
-
-- **Typing Mode** (Yellow search box border) - All keys add to your search query (including 'q')
-- **Navigation Mode** (Yellow results border) - Use shortcuts to interact with tasks ('q' quits)
-- Press **Tab** to switch between modes anytime
-
-## 💾 Where is My Data?
-
-Your tasks are saved automatically to:
-
-- **Windows**: `%APPDATA%\dev-todo\projects.json`
-- **Mac/Linux**: `~/.config/dev-todo/projects.json`
-
-## 🛠️ Advanced Setup
-
-### Add to PATH (Windows)
-
-So you can run `todo` from anywhere:
-
-1. Copy `todo.exe` to `C:\DevTools\`
-2. Add `C:\DevTools` to your PATH environment variable
-3. Restart your terminal
-4. Type `todo` anywhere!
-
-### Add to PATH (Mac/Linux)
-
-```bash
-sudo cp target/release/todo /usr/local/bin/
-```
-
-## 🎨 Customization
-
-Want different colors? Edit `src/task.rs`:
-
-```rust
-Status::Todo => ("[ ]", Color::Yellow),  // Change Yellow
-Status::InProgress => ("[>]", Color::Blue),  // Change Blue
-Status::Done => ("[X]", Color::Green),  // Change Green
-```
-
-## 🐛 Troubleshooting
-
-**App won't start?**
-
-- Delete the data file (you'll lose your tasks):
-  - Windows: Delete `%APPDATA%\dev-todo\projects.json`
-  - Mac/Linux: Delete `~/.config/dev-todo/projects.json`
-
-**Data not saving?**
-
-- Make sure the app has permission to write to the config folder
-- Manually create the folder if needed
-
-## 📦 Dependencies
-
-- **ratatui** - Beautiful terminal UI
-- **crossterm** - Cross-platform terminal control
-- **chrono** - Date and time handling
-- **fuzzy-matcher** - Fast fuzzy search
-- **serde/serde_json** - Save/load data
-
-## 🤝 Contributing
-
-Found a bug? Have an idea? Contributions welcome!
-
-- Report issues
-- Submit pull requests
-- Suggest features
-
-## 📄 License
-
-MIT License - See LICENSE file for details
-
-## 🎯 Tips for Productivity
-
-1. **Start your day** by checking the "Upcoming Tasks" panel
-2. **Use priorities** to focus on what matters (Q1 first!)
-3. **Search is your friend** - Press `s` when you can't find something
-4. **Set due dates** for everything important
-5. **Review completed tasks** to see your progress
+[![PyPI](https://img.shields.io/pypi/v/server-health-monitor)](https://pypi.org/project/server-health-monitor/)
+[![Python](https://img.shields.io/pypi/pyversions/server-health-monitor)](https://pypi.org/project/server-health-monitor/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ---
 
-**Made with ❤️ and Rust**
+## ✨ Features
 
-Need help? Press `q` to quit and read this README again! 😊
+- **Interactive TUI** — Full-screen terminal dashboard (like `htop`, but for everything)
+- **Email Alerts** — Get notified when CPU, memory, disk, or swap cross thresholds
+- **Auto-start on Boot** — One command to install as a systemd service
+- **Zero Config** — Works out of the box with sensible defaults
+- **Lightweight** — Only `psutil`, `PyYAML`, `loguru`, and `pydantic` as core dependencies
+
+---
+
+## 📦 Installation
+
+```bash
+pip install server-health-monitor
+```
+
+---
+
+## 🚀 Quick Start
+
+### 1. Launch the TUI
+
+```bash
+monitor
+```
+
+Navigate with `1`–`6` or `Tab` to switch between views: **Overview**, **Processes**, **Disk**, **Network**, **Alerts**, and **Config**.
+
+### 2. Run as Background Daemon
+
+```bash
+monitor --daemon
+```
+
+Collects metrics, checks thresholds, and sends email alerts — no UI.
+
+---
+
+## 🔧 Configuration
+
+SHM reads from `config.yaml` in the current directory (or pass `--config /path/to/config.yaml`).
+
+### Default Config
+
+```yaml
+thresholds:
+  cpu_percent: 85.0
+  memory_percent: 85.0
+  disk_percent: 90.0
+  swap_percent: 80.0
+
+alerts:
+  enabled: true
+  cooldown_minutes: 5
+  log_file: alerts.jsonl
+
+smtp:
+  enabled: false
+  host: smtp.gmail.com
+  port: 587
+  username: ""
+  password: ""
+  from_addr: admin@example.com
+  to_addrs:
+    - alerts@example.com
+  use_tls: true
+
+collection_interval: 5
+metrics_log: metrics.jsonl
+```
+
+You can also edit the config directly in the TUI — press `6` to go to the **Config** tab, use arrow keys to navigate, `Enter` to edit, and `s` to save.
+
+---
+
+## 📧 Email Alerts Setup
+
+### Gmail (Recommended)
+
+1. **Create a Google App Password**  
+   Go to [https://myaccount.google.com/apppasswords](https://myaccount.google.com/apppasswords) and generate a 16-character app password.
+
+2. **Update your config**:
+   ```yaml
+   smtp:
+     enabled: true
+     host: smtp.gmail.com
+     port: 587
+     username: "you@gmail.com"
+     password: "abcd efgh ijkl mnop"    # your app password
+     from_addr: "you@gmail.com"
+     to_addrs:
+       - "alerts@yourcompany.com"
+     use_tls: true
+   ```
+
+3. **Test it** — Set `cpu_percent: 1.0` temporarily and run:
+   ```bash
+   monitor --daemon
+   ```
+   You should receive an email within seconds.
+
+> **Important:** The TUI (`monitor`) is display-only. Email alerts are sent by the **daemon** (`monitor --daemon`) or the **systemd service**.
+
+---
+
+## 🔄 Auto-Start on Boot (systemd)
+
+Install SHM as a system service so the alerting daemon starts automatically on every boot:
+
+```bash
+sudo monitor --install
+```
+
+This will:
+- Copy a default config to `/etc/shm/config.yaml`
+- Register and enable a `shm` systemd service
+- Start the daemon immediately
+
+### After Installation
+
+```bash
+# Edit config (set your SMTP credentials, thresholds, etc.)
+sudo nano /etc/shm/config.yaml
+
+# Apply changes
+sudo systemctl restart shm
+```
+
+### Management Commands
+
+| Command | Description |
+|---|---|
+| `sudo systemctl status shm` | Check if daemon is running |
+| `sudo systemctl restart shm` | Restart after config changes |
+| `sudo journalctl -u shm -f` | Watch live logs |
+| `sudo monitor --uninstall` | Remove the service |
+
+> **Note:** The systemd service runs independently. You can still use `monitor` (TUI) at any time for interactive monitoring.
+
+---
+
+## 🎮 TUI Keyboard Reference
+
+### Global
+| Key | Action |
+|---|---|
+| `1`–`6` / `Tab` | Switch view |
+| `Shift+Tab` | Previous view |
+| `?` | Show help overlay |
+| `q` | Quit |
+
+### Processes View
+| Key | Action |
+|---|---|
+| `↑` `↓` | Select process |
+| `/` | Search by name or PID |
+| `s` | Cycle sort (CPU → MEM → PID → Name) |
+| `k` | Kill selected process (with confirmation) |
+| `Esc` | Clear search |
+
+### Config View
+| Key | Action |
+|---|---|
+| `↑` `↓` | Navigate fields |
+| `Enter` | Edit field value |
+| `s` | Save config to disk |
+
+---
+
+## 📊 What Gets Monitored?
+
+| Category | Metrics |
+|---|---|
+| **CPU** | Total %, per-core %, load average, temperature (if available) |
+| **Memory** | Used/total, percentage, available, cached, buffers, swap |
+| **Disk** | All mounted partitions — used/total/free per mount |
+| **Network** | RX/TX rates, total bytes, per-interface stats, errors/drops |
+| **Processes** | PID, name, user, CPU%, MEM%, status — sortable and searchable |
+
+---
+
+## 📁 File Structure
+
+After running, SHM creates these files in the working directory:
+
+| File | Purpose |
+|---|---|
+| `config.yaml` | Configuration (thresholds, SMTP, intervals) |
+| `metrics.jsonl` | Timestamped metric snapshots (auto-rotated at 10k lines) |
+| `alerts.jsonl` | Alert history log |
+| `monitor.log` | Application log (rotated at 10 MB) |
+
+---
+
+## 🔍 Troubleshooting
+
+### `monitor: command not found`
+Make sure the package is installed and the Python scripts directory is in your `PATH`:
+```bash
+pip install server-health-monitor
+# If using a venv:
+source venv/bin/activate
+```
+
+### Not receiving emails
+- Ensure you are running the **daemon** (`monitor --daemon`) or the **systemd service** — the TUI alone does not send emails.
+- Verify `smtp.enabled: true` in your config.
+- Check that you're using a [Google App Password](https://myaccount.google.com/apppasswords), not your regular password.
+- Check logs: `sudo journalctl -u shm -f` or `tail -f monitor.log`.
+
+### Some metrics are missing
+Network connection details and listening ports require elevated privileges:
+```bash
+sudo monitor
+```
+
+---
+
+## 🏗️ Development
+
+```bash
+# Clone the repo
+git clone https://github.com/Jayanth1312/server-health-monitor.git
+cd server-health-monitor
+
+# Create a virtual environment
+python3 -m venv venv
+source venv/bin/activate
+
+# Install in editable mode
+pip install -e .
+
+# Run
+monitor
+```
+
+---
+
+## 📜 License
+
+MIT License — see [LICENSE](LICENSE) for details.
+
+---
+
+## 🙏 Credits
+
+Built by **Jayanth Paladugu** — [GitHub](https://github.com/Jayanth1312)
+
+If you find this useful, give it a ⭐ on GitHub!

@@ -1,0 +1,18 @@
+[Unit]
+Description=Server Health Monitor — background alerting daemon
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/monitor --daemon --config /etc/shm/config.yaml
+Restart=on-failure
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+WorkingDirectory=/var/lib/shm
+
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

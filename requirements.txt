@@ -1,0 +1,5 @@
+# Core (TUI mode — stdlib + these)
+psutil>=5.9.0
+PyYAML>=6.0
+loguru>=0.7.0
+pydantic>=2.0.0

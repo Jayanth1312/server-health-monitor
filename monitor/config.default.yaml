@@ -1,0 +1,27 @@
+# Default configuration for Server Health Monitor
+# Copy to /etc/shm/config.yaml (or use --config to point elsewhere)
+
+thresholds:
+  cpu_percent: 85.0
+  memory_percent: 85.0
+  disk_percent: 90.0
+  swap_percent: 80.0
+
+alerts:
+  enabled: true
+  cooldown_minutes: 5
+  log_file: alerts.jsonl
+
+smtp:
+  enabled: false
+  host: smtp.gmail.com
+  port: 587
+  username: ""
+  password: ""
+  from_addr: admin@example.com
+  to_addrs:
+    - alerts@example.com
+  use_tls: true
+
+collection_interval: 5
+metrics_log: metrics.jsonl
