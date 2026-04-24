@@ -19,20 +19,47 @@ from monitor.alerter import AlertManager
 from monitor.reporter import Reporter
 
 
-# Configure logger
-logger.remove()  # Remove default handler
-logger.add(
-    "monitor.log",
-    rotation="10 MB",
-    retention="7 days",
-    level="INFO",
-    format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}"
-)
-logger.add(
-    sys.stderr,
-    level="WARNING",
-    format="<level>{level: <8}</level> | <level>{message}</level>"
-)
+# ── log path ──────────────────────────────────────────────────────────────
+# Never use a relative path — the CLI can be launched from any cwd (e.g. a
+# read-only mount like /mnt/c on WSL), which would crash at import time.
+def _resolve_log_path() -> Path:
+    # Explicit override wins
+    override = os.environ.get("SHM_LOG_FILE")
+    if override:
+        return Path(override).expanduser()
+
+    # Running as root (e.g. systemd service, sudo) → system dir
+    if hasattr(os, "geteuid") and os.geteuid() == 0:
+        return Path("/var/log/shm/monitor.log")
+
+    # Regular user → XDG state dir
+    state = os.environ.get("XDG_STATE_HOME") or str(Path.home() / ".local" / "state")
+    return Path(state) / "shm" / "monitor.log"
+
+
+def _setup_logging() -> None:
+    logger.remove()
+    logger.add(
+        sys.stderr,
+        level="WARNING",
+        format="<level>{level: <8}</level> | <level>{message}</level>",
+    )
+    log_path = _resolve_log_path()
+    try:
+        log_path.parent.mkdir(parents=True, exist_ok=True)
+        logger.add(
+            str(log_path),
+            rotation="10 MB",
+            retention="7 days",
+            level="INFO",
+            format="{time:YYYY-MM-DD HH:mm:ss} | {level: <8} | {message}",
+        )
+    except (OSError, PermissionError) as e:
+        # File logging is best-effort — stderr handler still works.
+        print(f"⚠  File logging disabled ({log_path}): {e}", file=sys.stderr)
+
+
+_setup_logging()
 
 
 # ── paths ─────────────────────────────────────────────────────────────────
@@ -45,6 +72,46 @@ DATA_DIR     = Path("/var/lib/shm")
 _PKG_DIR     = Path(__file__).resolve().parent
 _SERVICE_TPL = _PKG_DIR / "monitor.service"
 _DEFAULT_CFG = _PKG_DIR / "config.default.yaml"
+
+
+# ── config path resolution ────────────────────────────────────────────────
+def _user_config_path() -> Path:
+    base = os.environ.get("XDG_CONFIG_HOME") or str(Path.home() / ".config")
+    return Path(base) / "shm" / "config.yaml"
+
+
+def _resolve_config_path(explicit):
+    """Find an existing config, or create a default user config on first run."""
+    if explicit:
+        p = Path(explicit).expanduser()
+        if not p.exists():
+            print(f"❌ Config file not found: {p}")
+            sys.exit(1)
+        return p
+
+    candidates = [
+        Path.cwd() / "config.yaml",
+        _user_config_path(),
+        Path("/etc/shm/config.yaml"),
+    ]
+    for c in candidates:
+        if c.exists():
+            return c
+
+    dest = _user_config_path()
+    try:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        if _DEFAULT_CFG.exists():
+            shutil.copy2(_DEFAULT_CFG, dest)
+        else:
+            MonitorConfig().save(dest)
+        print(f"ℹ  No config found — created default at {dest}")
+        print(f"   Edit it to set SMTP credentials and thresholds.")
+        return dest
+    except (OSError, PermissionError) as e:
+        print(f"❌ Could not create default config at {dest}: {e}")
+        print(f"💡 Pass --config /path/to/config.yaml or create one manually.")
+        sys.exit(1)
 
 
 # ══════════════════════════════════════════════════════════════════════════
@@ -241,10 +308,18 @@ def main():
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""\
 Examples:
-  monitor                    # Interactive TUI (default)
-  monitor --daemon           # Background mode (no UI)
-  sudo monitor --install     # Install as boot service
-  sudo monitor --uninstall   # Remove boot service
+  monitor                              # Interactive TUI (default)
+  monitor --daemon                     # Background mode (no UI)
+  monitor --config ~/my-config.yaml    # Use a specific config file
+  sudo monitor --install               # Install as boot service
+  sudo monitor --uninstall             # Remove boot service
+
+Config search order (first found wins):
+  1. --config <path>                (explicit)
+  2. ./config.yaml                  (current directory)
+  3. ~/.config/shm/config.yaml      (user config)
+  4. /etc/shm/config.yaml           (system config, used by service)
+If none exist, a default is auto-created at ~/.config/shm/config.yaml.
 
 TUI keys:
   1-6 / Tab     switch view (Overview, Processes, Disk, Network, Alerts, Config)
@@ -282,8 +357,8 @@ TUI keys:
 
     parser.add_argument(
         '--config', '-c',
-        default='config.yaml',
-        help='Configuration file path (default: config.yaml)'
+        default=None,
+        help='Path to config.yaml (default: auto-search, auto-create if missing)'
     )
 
     args = parser.parse_args()
@@ -297,21 +372,18 @@ TUI keys:
         uninstall_service()
         return
 
-    # ── modes that need a config file ─────────────────────────────────
-    if not Path(args.config).exists():
-        print(f"❌ Config file not found: {args.config}")
-        print(f"💡 Create config.yaml or specify --config")
-        sys.exit(1)
+    # ── resolve config path ───────────────────────────────────────────
+    config_path = _resolve_config_path(args.config)
 
     # Daemon mode
     if args.daemon:
-        run_daemon(args.config)
+        run_daemon(str(config_path))
 
     # Default: fast curses TUI (no heavy deps)
     else:
         try:
             from monitor.fast_tui import run_tui
-            run_tui(args.config)
+            run_tui(str(config_path))
         except Exception as e:
             print(f"❌ Error starting TUI: {e}")
             logger.error(f"TUI error: {e}")

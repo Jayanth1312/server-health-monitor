@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name="server-health-monitor",
-    version="1.0.0",
+    version="1.0.2",
     author="Jayanth Paladugu",
     author_email="jayanthpaladugu3@gmail.com",
     description="Lightweight Linux server health monitor with TUI and email alerts",

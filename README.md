@@ -20,8 +20,158 @@ A lightweight, production-ready system health monitor for Linux servers. Beautif
 
 ## 📦 Installation
 
+The **recommended** way to install `monitor` is with [`pipx`](https://pipx.pypa.io/) — it creates an isolated virtualenv behind the scenes and exposes the `monitor` command globally, sidestepping PEP 668's `externally-managed-environment` errors on modern distros.
+
 ```bash
+pipx install server-health-monitor
+pipx ensurepath        # adds ~/.local/bin to PATH (open a new shell after)
+```
+
+### Install `pipx` for your distro
+
+<details>
+<summary><strong>Debian / Ubuntu / Linux Mint / Pop!_OS</strong></summary>
+
+```bash
+sudo apt update
+sudo apt install -y pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Kali Linux</strong></summary>
+
+```bash
+sudo apt update
+sudo apt install -y pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Fedora</strong></summary>
+
+```bash
+sudo dnf install -y pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>RHEL / CentOS Stream / Rocky / AlmaLinux (9+)</strong></summary>
+
+```bash
+sudo dnf install -y python3-pip
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Arch Linux / Manjaro / EndeavourOS</strong></summary>
+
+```bash
+sudo pacman -S --needed python-pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>openSUSE (Tumbleweed / Leap)</strong></summary>
+
+```bash
+sudo zypper install -y python3-pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Alpine Linux</strong></summary>
+
+```bash
+sudo apk add pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Void Linux</strong></summary>
+
+```bash
+sudo xbps-install -S python3-pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Gentoo</strong></summary>
+
+```bash
+sudo emerge --ask dev-python/pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>NixOS</strong></summary>
+
+```bash
+nix-env -iA nixpkgs.pipx
+pipx ensurepath
+```
+Or declaratively via `environment.systemPackages = [ pkgs.pipx ];`.
+</details>
+
+<details>
+<summary><strong>macOS</strong></summary>
+
+```bash
+brew install pipx
+pipx ensurepath
+```
+</details>
+
+<details>
+<summary><strong>Any distro (fallback — install pipx via pip)</strong></summary>
+
+If your distro doesn't ship `pipx`:
+
+```bash
+python3 -m pip install --user pipx
+python3 -m pipx ensurepath
+```
+</details>
+
+Then install SHM:
+
+```bash
+pipx install server-health-monitor
+```
+
+### Alternative: virtualenv + `pip`
+
+If you'd rather not use `pipx`:
+
+```bash
+python3 -m venv ~/.venvs/shm
+source ~/.venvs/shm/bin/activate
 pip install server-health-monitor
+monitor
+```
+
+> **⚠️ Do not** run `pip install server-health-monitor` system-wide on modern Linux — it will fail with `error: externally-managed-environment` (PEP 668), or pollute your OS Python if forced with `--break-system-packages`.
+
+### Upgrading
+
+```bash
+pipx upgrade server-health-monitor
+```
+
+### Uninstalling
+
+```bash
+pipx uninstall server-health-monitor
 ```
 
 ---
@@ -206,12 +356,11 @@ After running, SHM creates these files in the working directory:
 ## 🔍 Troubleshooting
 
 ### `monitor: command not found`
-Make sure the package is installed and the Python scripts directory is in your `PATH`:
-```bash
-pip install server-health-monitor
-# If using a venv:
-source venv/bin/activate
-```
+If you installed with `pipx`, run `pipx ensurepath` and open a new shell.
+If you installed in a venv, activate it first: `source path/to/venv/bin/activate`.
+
+### `error: externally-managed-environment`
+This is PEP 668 on Kali / Debian / Ubuntu — `pip install` outside a venv is blocked by the OS. Use `pipx install server-health-monitor` (recommended), or install inside a venv. See the [Installation](#-installation) section.
 
 ### Not receiving emails
 - Ensure you are running the **daemon** (`monitor --daemon`) or the **systemd service** — the TUI alone does not send emails.
